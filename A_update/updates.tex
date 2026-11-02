@@ -1,0 +1,51 @@
+% --- Instructions -----------------------------------------------------------
+\noindent\textbf{Instructions.} Please include a one-page table summarizing the
+progress you have made in your research since the last report. If this is your
+first thesis report, leave the table blank. Clearly report any difficulties
+encountered. In the narrative text, explain the main changes and where they
+were made (e.g., sections, figures, tables).
+
+% --- Sample two-column table (edit/extend rows as needed) -------------------
+\begin{longtable}{p{0.30\textwidth} p{0.66\textwidth}}
+\caption{Progress summary since the previous report}\label{tab:progress}\\
+\toprule
+\textbf{Task / Area} & \textbf{Progress since last report (deliverables, dates, blockers)}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Task / Area} & \textbf{Progress since last report (deliverables, dates, blockers)}\\
+\midrule
+\endhead
+
+Literature review &
+Added 12 references (Mendeley/Zotero synced); integrated two key surveys.
+Updated related work to reflect 2023–2025 findings. \\
+
+Data collection &
+Acquired CCTV dataset (48h; 1080p); cleaned 7\% corrupted frames; anonymized faces.
+\textit{Blocker:} missing ground truth for 3 segments; request sent on 2025-08-01. \\
+
+Method / model &
+Implemented baseline detection (YOLOv8; mAP@50=0.71).
+Prototyped queue-length metric; parametrized service-time distributions. \\
+
+Validation &
+Held 5-fold CV; preliminary RMSE for qLoS = 0.18.
+Planned external validation with Airport~B dataset (ETA: 2025-08-20). \\
+
+Writing / edits &
+Rewrote Introduction and Methods; expanded Section~3.2.
+Replaced Fig.~2 (higher resolution) and corrected Table~1 captions. \\
+
+Management &
+Ethics/IRB amendment approved (2025-07-22). Gantt updated; risk added for vendor delay. \\
+
+Next steps &
+Collect ground truth; hyperparameter sweep; draft Results section; prepare submission outline. \\
+
+\bottomrule
+\end{longtable}
+
+% --- First-report note ------------------------------------------------------
+\noindent\emph{First report?} If this is your first thesis report, leave the table
+blank and add a brief paragraph describing your starting point and planned milestones.

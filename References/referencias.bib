@@ -1,0 +1,437 @@
+% =====================================================================
+% referencias.bib — TG: Metamodelagem paramétrica do lado ar de aeroportos
+% Chaves usadas nos capítulos 1 a 7 (versão de 01/11/2026).
+% Campos no padrão abnTeX2 (url, urlaccessdate, note).
+% =====================================================================
+
+% ---------------------------------------------------------------------
+% Normas, documentos ICAO e publicações oficiais
+% ---------------------------------------------------------------------
+
+@book{icaopansaim,
+  author        = {{International Civil Aviation Organization}},
+  title         = {Procedures for Air Navigation Services: Aeronautical Information Management (Doc 10066)},
+  edition       = {1},
+  address       = {Montreal},
+  publisher     = {ICAO},
+  year          = {2018}
+}
+
+@book{icaoanexo4,
+  author        = {{International Civil Aviation Organization}},
+  title         = {Annex 4 to the Convention on International Civil Aviation: Aeronautical Charts},
+  edition       = {11},
+  address       = {Montreal},
+  publisher     = {ICAO},
+  year          = {2009}
+}
+
+@book{anexo14,
+  author        = {{International Civil Aviation Organization}},
+  title         = {Annex 14 to the Convention on International Civil Aviation: Aerodromes},
+  subtitle      = {Volume I: Aerodrome Design and Operations},
+  edition       = {9},
+  address       = {Montreal},
+  publisher     = {ICAO},
+  year          = {2022}
+}
+
+@book{icaoanexo15,
+  author        = {{International Civil Aviation Organization}},
+  title         = {Annex 15 to the Convention on International Civil Aviation: Aeronautical Information Services},
+  edition       = {16},
+  address       = {Montreal},
+  publisher     = {ICAO},
+  year          = {2018}
+}
+
+@book{icaoanexo19,
+  author        = {{International Civil Aviation Organization}},
+  title         = {Annex 19 to the Convention on International Civil Aviation: Safety Management},
+  edition       = {2},
+  address       = {Montreal},
+  publisher     = {ICAO},
+  year          = {2016}
+}
+
+@manual{iso19148,
+  author        = {{International Organization for Standardization}},
+  title         = {ISO 19148:2021 --- Geographic Information: Linear Referencing},
+  address       = {Geneva},
+  organization  = {ISO},
+  year          = {2021},
+  url           = {https://www.iso.org/standard/75150.html},
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{ibge2005sirgas,
+  author        = {{Instituto Brasileiro de Geografia e Estatística}},
+  title         = {Resolução do Presidente R.PR-1/2005: altera a caracterização do Sistema Geodésico Brasileiro},
+  address       = {Rio de Janeiro},
+  year          = {2005},
+  note          = {Adota o SIRGAS2000 como referencial geodésico oficial}
+}
+
+@misc{lgpd2018,
+  author        = {Brasil},
+  title         = {Lei n.º 13.709, de 14 de agosto de 2018: Lei Geral de Proteção de Dados Pessoais (LGPD)},
+  address       = {Brasília},
+  year          = {2018},
+  url           = {https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm},
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{decea_aoc_sbsj,
+  author        = {{Departamento de Controle do Espaço Aéreo}},
+  title         = {Carta de Obstáculos de Aeródromo (AOC): São José dos Campos (SBSJ)},
+  address       = {Rio de Janeiro},
+  year          = {2022},
+  note          = {AIRAC 2213, efetiva em 29 dez. 2022}
+}
+
+@misc{decea_adc_sbsj,
+  author        = {{Departamento de Controle do Espaço Aéreo}},
+  title         = {Carta de Aeródromo (ADC): São José dos Campos (SBSJ)},
+  address       = {Rio de Janeiro},
+  year          = {2026},
+  note          = {AIRAC 2604, efetiva em 16 abr. 2026}
+}
+
+@misc{decea_aip_sbsj,
+  author        = {{Departamento de Controle do Espaço Aéreo}},
+  title         = {AIP Brasil, AD 2: São José dos Campos (SBSJ)},
+  subtitle      = {Seções AD 2.12 e AD 2.13},
+  address       = {Rio de Janeiro},
+  year          = {2026},
+  note          = {Edição eAIP 20-2026. Consultada em 26 out. 2026}
+}
+
+% ---------------------------------------------------------------------
+% AIXM e ferramentas de SIG
+% ---------------------------------------------------------------------
+
+@manual{aixm511,
+  author        = {{EUROCONTROL} and {Federal Aviation Administration}},
+  title         = {AIXM 5.1.1 --- Aeronautical Information Exchange Model: Logical Data Model and XML Schema},
+  address       = {Brussels},
+  year          = {2016},
+  url           = {https://aixm.aero/page/aixm-511},
+  urlaccessdate = {2026-10-26}
+}
+
+@manual{aixm3,
+  author        = {{EUROCONTROL} and {Federal Aviation Administration}},
+  title         = {AIXM 5.1.1 --- Temporality Concept},
+  address       = {Brussels},
+  year          = {2021},
+  url           = {https://aixm.aero/page/aixm-511},
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{esri,
+  author        = {Esri},
+  title         = {ArcGIS Aviation Airports: Obstacle Limitation Surfaces and Airport Data Management},
+  year          = {2024},
+  url           = {https://pro.arcgis.com/en/pro-app/latest/help/aviation/airports/what-is-arcgis-aviation-airports-.htm},
+  urlaccessdate = {2026-11-01}
+}
+
+% ---------------------------------------------------------------------
+% Geodésia
+% ---------------------------------------------------------------------
+
+@article{vincenty1975,
+  author        = {Vincenty, Thaddeus},
+  title         = {Direct and inverse solutions of geodesics on the ellipsoid with application of nested equations},
+  journal       = {Survey Review},
+  volume        = {23},
+  number        = {176},
+  pages         = {88--93},
+  year          = {1975}
+}
+
+@article{karney2013,
+  author        = {Karney, Charles F. F.},
+  title         = {Algorithms for geodesics},
+  journal       = {Journal of Geodesy},
+  volume        = {87},
+  number        = {1},
+  pages         = {43--55},
+  year          = {2013},
+  doi           = {10.1007/s00190-012-0578-z}
+}
+
+% ---------------------------------------------------------------------
+% Dados temporais, event sourcing e CQRS
+% ---------------------------------------------------------------------
+
+@book{snodgrass,
+  author        = {Snodgrass, Richard T.},
+  title         = {Developing Time-Oriented Database Applications in SQL},
+  address       = {San Francisco},
+  publisher     = {Morgan Kaufmann},
+  year          = {2000},
+  isbn          = {978-1-55860-436-9},
+  url           = {https://www2.cs.arizona.edu/~rts/tdbbook.pdf},
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{fowler2005es,
+  author        = {Fowler, Martin},
+  title         = {Event Sourcing},
+  year          = {2005},
+  url           = {https://martinfowler.com/eaaDev/EventSourcing.html},
+  urlaccessdate = {2026-10-26}
+}
+
+@misc{young2010cqrs,
+  author        = {Young, Greg},
+  title         = {CQRS Documents},
+  year          = {2010},
+  url           = {https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf},
+  urlaccessdate = {2026-10-26}
+}
+
+@book{kleppmann2017,
+  author        = {Kleppmann, Martin},
+  title         = {Designing Data-Intensive Applications},
+  address       = {Sebastopol},
+  publisher     = {O'Reilly Media},
+  year          = {2017}
+}
+
+@misc{snowflake,
+  author        = {{Twitter Engineering}},
+  title         = {Announcing Snowflake},
+  year          = {2010},
+  url           = {https://blog.twitter.com/engineering/en_us/a/2010/announcing-snowflake},
+  urlaccessdate = {2026-11-01}
+}
+
+% ---------------------------------------------------------------------
+% Registros imutáveis em sistemas financeiros
+% ---------------------------------------------------------------------
+
+@article{helland2016,
+  author        = {Helland, Pat},
+  title         = {Immutability changes everything},
+  journal       = {Communications of the ACM},
+  volume        = {59},
+  number        = {1},
+  pages         = {64--70},
+  year          = {2016},
+  note          = {Versão original em CIDR 2015}
+}
+
+@misc{stripe_ledger,
+  author        = {Ganelin, Ilya},
+  title         = {Ledger: Stripe's system for tracking and validating money movement},
+  year          = {2024},
+  note          = {Stripe Blog, 16 fev. 2024},
+  url           = {https://stripe.com/blog/ledger-stripe-system-for-tracking-and-validating-money-movement},
+  urlaccessdate = {2026-10-26}
+}
+
+@misc{square_books,
+  author        = {Strza{\l}kowski, {\L}ukasz},
+  title         = {Books, an immutable double-entry accounting database service},
+  year          = {2019},
+  note          = {Square Developer Blog, 16 out. 2019},
+  url           = {https://developer.squareup.com/blog/books-an-immutable-double-entry-accounting-database-service/},
+  urlaccessdate = {2026-10-26}
+}
+
+@misc{fowler2011lmax,
+  author        = {Fowler, Martin},
+  title         = {The LMAX Architecture},
+  year          = {2011},
+  url           = {https://martinfowler.com/articles/lmax.html},
+  urlaccessdate = {2026-10-26}
+}
+
+@misc{datomic,
+  author        = {Cognitect},
+  title         = {Datomic: documentation},
+  year          = {2026},
+  url           = {https://docs.datomic.com/},
+  urlaccessdate = {2026-10-26}
+}
+
+@misc{fintechfutures2020nubank,
+  author        = {{FinTech Futures}},
+  title         = {Brazilian challenger Nubank acquires firm behind Clojure and Datomic},
+  year          = {2020},
+  note          = {Publicado em 28 jul. 2020},
+  url           = {https://www.fintechfutures.com/bankingtech/brazilian-challenger-nubank-acquires-firm-behind-clojure-and-datomic},
+  urlaccessdate = {2026-10-26}
+}
+
+% ---------------------------------------------------------------------
+% Evidência de adulteração e bancos de ledger
+% ---------------------------------------------------------------------
+
+@article{haber1991,
+  author        = {Haber, Stuart and Stornetta, W. Scott},
+  title         = {How to time-stamp a digital document},
+  journal       = {Journal of Cryptology},
+  volume        = {3},
+  number        = {2},
+  pages         = {99--111},
+  year          = {1991}
+}
+
+@inproceedings{merkle,
+  author        = {Merkle, Ralph C.},
+  title         = {A digital signature based on a conventional encryption function},
+  booktitle     = {Advances in Cryptology --- CRYPTO '87},
+  series        = {Lecture Notes in Computer Science},
+  volume        = {293},
+  pages         = {369--378},
+  address       = {Berlin},
+  publisher     = {Springer},
+  year          = {1988}
+}
+
+@inproceedings{antonopoulos2021sqlledger,
+  author        = {Antonopoulos, Panagiotis and others},
+  title         = {SQL Ledger: Cryptographically verifiable data in Azure SQL Database},
+  booktitle     = {Proceedings of the 2021 International Conference on Management of Data (SIGMOD '21)},
+  pages         = {2437--2449},
+  address       = {New York},
+  publisher     = {ACM},
+  year          = {2021}
+}
+
+@misc{qldb,
+  author        = {{Amazon Web Services}},
+  title         = {Amazon Quantum Ledger Database (QLDB)},
+  year          = {2025},
+  note          = {Serviço encerrado em 31 jul. 2025},
+  url           = {https://aws.amazon.com/qldb/},
+  urlaccessdate = {2026-10-26}
+}
+
+@misc{rfc6962,
+  author        = {Laurie, Ben and Langley, Adam and Kasper, Emilia},
+  title         = {RFC 6962: Certificate Transparency},
+  organization  = {Internet Engineering Task Force},
+  year          = {2013},
+  url           = {https://www.rfc-editor.org/rfc/rfc6962},
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{rfc8785,
+  author        = {Rundgren, Anders and Jordan, Bret and Erdtman, Samuel},
+  title         = {RFC 8785: JSON Canonicalization Scheme (JCS)},
+  organization  = {Internet Engineering Task Force},
+  year          = {2020},
+  url           = {https://www.rfc-editor.org/rfc/rfc8785},
+  urlaccessdate = {2026-11-01}
+}
+
+% ---------------------------------------------------------------------
+% Sistemas distribuídos
+% ---------------------------------------------------------------------
+
+@inproceedings{brewer2000,
+  author        = {Brewer, Eric A.},
+  title         = {Towards robust distributed systems},
+  booktitle     = {Proceedings of the 19th Annual ACM Symposium on Principles of Distributed Computing (PODC)},
+  address       = {Portland},
+  publisher     = {ACM},
+  year          = {2000},
+  note          = {Palestra de abertura}
+}
+
+@article{gilbert2002cap,
+  author        = {Gilbert, Seth and Lynch, Nancy},
+  title         = {Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services},
+  journal       = {ACM SIGACT News},
+  volume        = {33},
+  number        = {2},
+  pages         = {51--59},
+  year          = {2002}
+}
+
+@inproceedings{kafka,
+  author        = {Kreps, Jay and Narkhede, Neha and Rao, Jun},
+  title         = {Kafka: A distributed messaging system for log processing},
+  booktitle     = {Proceedings of the NetDB Workshop},
+  address       = {Athens},
+  year          = {2011},
+  url           = {https://www.semanticscholar.org/paper/Kafka%3A-a-Distributed-Messaging-System-for-Log-Kreps-Narkhede/ea97f72bef9bb3c3f681f9fd463a35b3e52ef3f7},
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{sqlite,
+  author        = {SQLite},
+  title         = {SQLite documentation},
+  year          = {2026},
+  url           = {https://www.sqlite.org/docs.html},
+  urlaccessdate = {2026-11-01}
+}
+
+% ---------------------------------------------------------------------
+% Método (Design Science Research)
+% ---------------------------------------------------------------------
+
+@article{hevner2004,
+  author        = {Hevner, Alan R. and March, Salvatore T. and Park, Jinsoo and Ram, Sudha},
+  title         = {Design science in information systems research},
+  journal       = {MIS Quarterly},
+  volume        = {28},
+  number        = {1},
+  pages         = {75--105},
+  year          = {2004}
+}
+
+@article{peffers2007,
+  author        = {Peffers, Ken and Tuunanen, Tuure and Rothenberger, Marcus A. and Chatterjee, Samir},
+  title         = {A design science research methodology for information systems research},
+  journal       = {Journal of Management Information Systems},
+  volume        = {24},
+  number        = {3},
+  pages         = {45--77},
+  year          = {2007}
+}
+
+@article{gregor2013,
+  author        = {Gregor, Shirley and Hevner, Alan R.},
+  title         = {Positioning and presenting design science research for maximum impact},
+  journal       = {MIS Quarterly},
+  volume        = {37},
+  number        = {2},
+  pages         = {337--355},
+  year          = {2013}
+}
+
+% ---------------------------------------------------------------------
+% Artefatos deste trabalho
+% ---------------------------------------------------------------------
+
+@misc{aeroledger,
+  author        = {{Falheiro de Almeida}, Heyder},
+  title         = {aeroledger: registro auditável de dados do lado ar por event sourcing},
+  year          = {2026},
+  note          = {Biblioteca de código aberto, versão 0.6.0, commit e93b718},
+  url           = {https://github.com/heyfalheiro1537/aeroledger}, 
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{aeroledger_notebook,
+  author        = {{Falheiro de Almeida}, Heyder},
+  title         = {aeroledger\_notebook: experimentos de avaliação do aeroledger sobre a pista do SBSJ},
+  year          = {2026},
+  note          = {Repositório dos experimentos E1 a E6 e do gerador do banco extraído},
+  url           = {https://github.com/heyfalheiro1537/aeroledger_notebook},
+  urlaccessdate = {2026-11-01}
+}
+
+@misc{kaggle_sbsj,
+  author        = {{Falheiro de Almeida}, Heyder},
+  title         = {SBSJ Airside Event Ledger},
+  year          = {2026},
+  note          = {Conjunto de dados aberto (SQLite e CSV)},
+  url           = {https://www.kaggle.com/datasets/heyderalmeida/sbsj-airside-event-ledger},
+  urlaccessdate = {2026-11-01}
+}

@@ -1,0 +1,13 @@
+%%% quali.def - Definições para Exame de Qualificação
+%%% by
+%%%   Fábio Fagundes Silveira   -  ffs [at] ita [dot] br
+%%%   $Id: quali.def 2 2006-01-18 11:55:58Z ffs $
+%%%
+%%% Corrigido para incluir definição faltante de \itaoptioncourse
+%%%
+
+\renewcommand{\itaoptionlevel}{quali}
+\renewcommand{\itaoptioncourse}{\itaoptioncoursequalibabel}  % ESTA LINHA ESTAVA FALTANDO!
+\renewcommand{\itaworklevel}{\itaworklevelqualibabel}        %{Exame de Qualificação}
+\newcommand{\itaqualifictext}{\itaqualifictextbabel}         %Texto da Qualificacao
+\renewcommand{\itaauthortitle}{\itaauthortitlequalibabel}    %Candidato ao Doutorado

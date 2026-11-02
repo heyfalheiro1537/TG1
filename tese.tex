@@ -1,0 +1,255 @@
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+% Para alterar o TIPO DE DOCUMENTO, preencher a linha abaixo \documentclass[?]{?}
+%   \documentclass[tg]{ita}      = Trabalho de Graduacao
+%   \documentclass[tgfem]{ita}   = Para Engenheiras
+%                  msc           = Dissertacao de Mestrado
+%                  mscfem        = Para Mestras
+%                  dsc           = Tese de Doutorado
+%                  dscfem        = Para Doutoras
+%                  quali         = Exame de Qualificacao
+%                  qualifem      =
+%                  report        = Relatório de Seminário de Tese
+%
+% Para 'Draft Version'/'Versao Preliminar' com data no rodape, adicionar 'dv'
+% Para trabalhos em Inglês, adicionar 'eng'
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\documentclass[tg, dv]{ita}   % RASCUNHO: tirar 'dv' na versão final
+% Quando alterar a classe, rode mais uma vez o BUILD OUTPUT caso haja erro
+
+%--------------------------
+\makeatletter
+\AtBeginDocument{%
+  \providecommand{\itareferencesnamebabel}{References}%
+  \renewcommand\bibname{\itareferencesnamebabel}%
+  \providecommand{\urlprefix}{}%
+  \providecommand{\urldateprefix}{}%
+  \providecommand{\thesisname}{}%
+  \providecommand{\dissertationname}{}%
+  \providecommand{\holdername}{}%
+  \iflanguage{portuguese}{%
+    \renewcommand{\urlprefix}{Disponível em: }%
+    \renewcommand{\urldateprefix}{Acesso em: }%
+    \renewcommand{\thesisname}{Tese }%
+    \renewcommand{\dissertationname}{Dissertação }%
+    \renewcommand{\holdername}{Depositante}%
+  }{%
+    \renewcommand{\urlprefix}{Available at: }%
+    \renewcommand{\urldateprefix}{Accessed on: }%
+    \renewcommand{\thesisname}{Thesis}%
+    \renewcommand{\dissertationname}{Dissertation}%
+    \renewcommand{\holdername}{Holder}%
+  }%
+}
+\makeatother
+
+%--------------------------
+% Pacotes (cada um carregado uma única vez)
+%--------------------------
+\usepackage{ae}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{subcaption}  % ambiente subfigure
+\usepackage{caption}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{pdfpages}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{cancel}      % termos cancelados em equações
+
+\usepackage{longtable}   % tabelas multi-página
+\usepackage{array}       % novos tipos de coluna
+\usepackage{booktabs}
+\usepackage{multirow}
+\newcolumntype{L}{>{\raggedright\arraybackslash}p{0.65\linewidth}} % coluna larga
+
+\usepackage{url}
+\usepackage{appendix}
+\usepackage{lscape}      % página em paisagem
+\usepackage{multicol}
+\usepackage{lettrine}
+\usepackage{titlesec}
+\usepackage[table]{xcolor}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{mathptmx}    % Times New Roman
+
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+% Espaçamento padrão de todo o documento
+%   \singlespacing | \onehalfspacing | \doublespacing
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\onehalfspacing
+
+%-------Thesis Report-------- (usado só na opção [report])
+\newcommand{\student}{Student Name}
+\newcommand{\degr}{Master's Degree Candidate}
+\newcommand{\advisors}{Prof. Dr. Name}
+\newcommand{\semreg}{2nd}
+\newcommand{\reader}{Prof. Dr. Name of the Reader}
+%------------------------------------------------------
+
+% Fallbacks para \dayname e \monthname (PT-BR/EN)
+\makeatletter
+\providecommand{\dayname}{\number\day}
+\providecommand{\monthname}{%
+  \iflanguage{brazil}{%
+    \ifcase\month\or
+      janeiro\or fevereiro\or março\or abril\or maio\or junho\or
+      julho\or agosto\or setembro\or outubro\or novembro\or dezembro\fi
+  }{%
+    \ifcase\month\or
+      January\or February\or March\or April\or May\or June\or
+      July\or August\or September\or October\or November\or December\fi
+  }%
+}
+\makeatother
+
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+% Identificações
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\course{Engenharia Civil-Aeronáutica}
+\area{Transporte Aéreo e Aeroportos} % não utilizado no caso de TG
+
+\authorgender{masc}
+\author{Heyder}{Falheiro de Almeida}
+\itaauthoraddress{Rua H8A 141}{12228-460}{São José dos Campos, SP}
+
+% Título PROVISÓRIO -- fechar com o orientador
+\title{Metamodelagem paramétrica do lado ar de aeroportos: dados auditáveis por derivação de premissas retidas}
+
+\advisorgender{masc}
+\advisor{Prof.~Dr.}{Evandro José Silva}{ITA}
+
+% Coorientador (descomentar se houver)
+%\reviewergender{fem}
+%\Reviewer{Prof$^\textnormal{a}$ Dr.}{Nome}{ITA}
+
+\bossgender{masc}
+\boss{Prof.~Dr.}{Celso Massaki Hirata}
+
+% Coordenador do curso (TG)
+\bosscoursegender{fem}
+\bosscourse{Prof.~Dra.}{Cláudia Azevedo Pereira}
+
+% Palavras-chave PROVISÓRIAS -- as definitivas são informadas pela Biblioteca (CIP)
+\kwcip{Informação aeronáutica}
+\kwcip{Aeroportos}
+\kwcip{Auditabilidade}
+\kwcip{Modelagem paramétrica}
+
+% Banca examinadora -- PENDENTE
+\examiner{Prof. Dr.}{X}{}{X}
+\examiner{Prof. Dr.}{X}{}{X}
+\examiner{Prof. Dr.}{X}{}{X}
+
+% Número CDU (somente para TG) -- PENDENTE, solicitar à Biblioteca
+\cdu{???.??}
+
+\frontmatter
+
+\begin{document}
+
+\input{PreTextuais/main}
+
+\mainmatter
+% Os capítulos começam aqui. Cada capN.tex começa direto no texto, sem \chapter.
+
+% --- Capítulo "Updates" só para a opção [report] ---
+\makeatletter
+\newcommand{\updatesname}{%
+  \iflanguage{portuguese}{Atualizações}{Updates}%
+}
+\@ifclasswith{ita}{report}{%
+  \chapter*{\updatesname}
+  \input{A_update/updates}
+}{}
+\makeatother
+%----------------------------------------------
+
+\chapter{Introdução}\label{chap:introducao}
+\input{Cap1/cap1}
+
+\chapter{Fundamentação teórica}\label{chap:fundamentacao}
+\input{Cap2/cap2}
+
+\chapter{Metodologia}\label{chap:metodologia}
+\input{Cap3/cap3}
+
+\chapter{Desenvolvimento e aplicação}\label{chap:solucao}
+\input{Cap4/cap4}
+
+\chapter{Resultados}\label{chap:resultados}
+\input{Cap5/cap5}   % conteúdo do atual Cap6
+
+\chapter{Discussão}\label{chap:discussao}
+\input{Cap6/cap6}   % conteúdo do atual Cap7
+
+\chapter{Conclusão}\label{chap:conclusao}
+\input{Cap7/cap7}
+
+% --- Cronograma só para a opção [report] ---
+\makeatletter
+\newcommand{\schedulename}{%
+  \iflanguage{portuguese}{Cronograma}{Schedule}%
+}
+\@ifclasswith{ita}{report}{%
+  \chapter{\schedulename}
+  \input{A_schedule/schedule}
+}{}
+\makeatother
+
+% REFERÊNCIAS BIBLIOGRÁFICAS
+% Conferir o nome da pasta: References/ ou Referencias/
+\renewcommand\bibname{\itareferencesnamebabel}
+\bibliography{References/referencias}
+
+% Apêndices (material do autor) -----------------------------
+\appendix
+\chapter{Testes de verificação}
+\input{ApeA/apendiceA}
+
+\chapter{Esquema do banco (DDL)}
+\input{ApeB/apendiceB}
+
+\chapter{Reprodução do experimento}
+\input{ApeC/apendiceC}
+
+% Anexos (material de terceiros) ----------------------------
+\annex
+\chapter{Cartas oficiais do SBSJ}
+\input{AneA/anexoA}
+
+\iffalse
+%Glossário ------------------------------------------
+\newcommand{\itaglosstitle}{%
+    \iflanguage{portuguese}{Glossário}{Glossary}%
+}
+\chapter*{\itaglosstitle}
+\addcontentsline{toc}{chapter}{\itaglosstitle}
+
+\noindent
+\textbf{Termo:} Definição.
+
+%Folha de Registro do Documento ---------------------
+\FRDitadata{DATA}
+\FRDitadocnro{DCTA/ITA/TC-???/2026} % número solicitado à Biblioteca
+\FRDitaorgaointerno{Instituto Tecnológico de Aeronáutica -- ITA}
+\FRDitapalavrasautor{Informação aeronáutica; Aeroportos; Auditabilidade}
+\FRDitapalavrasresult{PREENCHER}
+\FRDitapalavraapresentacao{Trabalho de Graduação, ITA, São José dos Campos, 2026. \NumPenultimaPagina\ páginas.}
+\FRDitaresumo{\input{PreTextuais/resumo}}
+%  Nacional ou Internacional -- N/I ; Ostensivo, Reservado, Confidencial ou Secreto -- O/R/C/S
+\FRDitaOpcoes{N}{O}
+\itaFRD
+\fi
+
+\end{document}
+
+%%% Template: Evandro José da Silva, Decio Yoshimoto (Dez 2024); versão Overleaf por
+%%% Alejandro A. Rios Cruz, Saulo Gómez, Ocimar Santos.
+%%% Overleaf: https://pt.overleaf.com/latex/templates/thesis-template-aeronautics-institute-of-technology-ita/yhfrqqydpygk
+%%% GitHub:   https://github.com/AlejandroRios/Template_Thesis_ITA

@@ -1,0 +1,12 @@
+A informação aeronáutica sobre a infraestrutura de aeroportos chega aos usuários por meio de produtos oficiais, como a Publicação de Informação Aeronáutica e as cartas aeronáuticas, que apresentam o estado dos dados na data de efetividade de cada edição. 
+Quando um valor muda entre edições, a mudança pode refletir um novo levantamento, uma obra ou uma correção. O produto publicado, porém, não informa qual foi a causa, quem a afirmou nem de quais premissas o novo valor depende. 
+Este trabalho trata dessa lacuna de rastreabilidade, sem pretender verificar a exatidão das medições. 
+Propõe-se uma arquitetura de dados para o lado ar de aeroportos baseada em \textit{event sourcing}, em que cada alteração é registrada como um evento imutável, com autor e causa, à maneira de um livro-razão contábil. 
+Os valores que podem ser calculados, como comprimentos e distâncias declaradas, não são armazenados: são derivados das premissas no momento da consulta. 
+A arquitetura foi implementada como biblioteca de código aberto e avaliada, segundo a pesquisa em ciência do design, por seis experimentos com dados reais da pista do Aeroporto de São José dos Campos, com critérios de aprovação definidos antes da execução. 
+Os valores publicados foram recalculados dentro da precisão oficial e o estado dos dados em instantes passados foi reconstruído com a causa de cada alteração, com as modificações indevidas no histórico detectadas, e um verificador independente confirmou a sua integridade sem recorrer à biblioteca. 
+Conclui-se que a arquitetura torna esses dados rastreáveis e verificáveis, dentro de limites declarados: a reescrita completa do histórico só é detectada por comparação com uma referência externa, a autoria é registrada mas não autenticada, e os resultados provêm de um único estudo de caso.
+
+\bigskip
+\noindent\textbf{Palavras-chave:} Informação aeronáutica. Aeroportos.
+Auditabilidade. \textit{Event sourcing}. Referenciamento linear.

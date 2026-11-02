@@ -1,0 +1,65 @@
+
+
+% Folha de Rosto e Capa
+\maketitle
+
+
+
+
+% Dedicatoria: Nao esqueca essa secao  ... :-)
+\begin{itadedication}
+\textit{Aos meus pais, que nunca questionaram por que eu precisava mapear
+um aeroporto inteiro para me formar.
+À minha parceira, que aguentou incontáveis conversas sobre
+arquitetura de software e fingiu achar interessante.
+}
+\end{itadedication}
+
+% Agradecimentos
+\begin{itathanks}
+\input{PreTextuais/agradecimentos}
+\end{itathanks}
+
+% Epígrafe
+\thispagestyle{empty}
+\ifhyperref\pdfbookmark[0]{\nameepigraphe}{epigrafe}\fi
+\begin{flushright}
+\begin{spacing}{1}
+\mbox{}\vfill
+\input{PreTextuais/epigrafe}
+\end{spacing}
+\end{flushright}
+
+
+
+% Resumo
+\begin{abstract}
+\noindent
+\input{PreTextuais/resumo}
+\end{abstract}
+
+% Abstract
+\begin{englishabstract}
+\noindent
+\input{PreTextuais/abstract}
+\end{englishabstract}
+
+% Lista de figuras
+\listoffigures %opcional
+
+% Lista de tabelas
+\listoftables %opcional
+
+% % Lista de abreviaturas
+% \listofabbreviations
+% \input{PreTextuais/listaabreviaturas} %opcional
+
+% % Lista de simbolos
+% \listofsymbols
+% \input{PreTextuais/listasimbolos} %opcional
+
+
+
+
+% Summmary
+\tableofcontents

@@ -1,0 +1,179 @@
+Este capítulo apresenta os resultados dos seis experimentos, na ordem em que foram definidos na Seção~\ref{sec:experimentos} e executados conforme a Seção~\ref{sec:procedimentos}. Para cada experimento, apresenta-se primeiro o que foi obtido e, em seguida, a resposta à pergunta correspondente. Todos os números provêm do \textit{notebook} executado \cite{aeroledger_experimentos}. A Seção~\ref{sec:res-banco} trata do banco extraído, a Seção~\ref{sec:res-sintese} reúne as respostas, e a Seção~\ref{sec:res-limites} discute os limites da avaliação.
+
+\section{E1: causa}\label{sec:res-e1}
+
+Entre a AOC de 2022 e a ADC de 2026, mudam doze campos (Tabela~\ref{tab:res-e1}), e nenhum deles traz causa. O registro informa quem publicou cada valor e em que edição, mas não por que o número mudou.
+
+A alteração do comprimento da pista, de 2676 para 2675~m, aparece como sete números editados separadamente. Isso ocorre porque as distâncias declaradas estão guardadas, e não calculadas. As alterações da zona de parada e da faixa de pista não têm explicação em nenhuma das duas publicações.
+
+\begin{table}[htbp]
+    \centering
+    \caption{E1: campos que mudam entre a AOC de 2022 e a ADC de 2026.}
+    \label{tab:res-e1}
+    \begin{tabular}{l r r}
+        \toprule
+        Campo & AOC 2213 (m) & ADC 2604 (m) \\
+        \midrule
+        Comprimento da pista & 2676 & 2675 \\
+        Comprimento da zona de parada & 325 & 283 \\
+        Comprimento da faixa & 3121 & 3118 \\
+        Largura da faixa & 300 & 280 \\
+        ASDA 16 & 3001 & 2958 \\
+        TORA, TODA e LDA 16 & 2676 & 2675 \\
+        TORA, TODA, ASDA e LDA 34 & 2676 & 2675 \\
+        \bottomrule
+    \end{tabular}
+    \par\smallskip{\small Fonte: o autor, a partir de \citeonline{decea2022aoc} e \citeonline{decea2026adc}.}
+\end{table}
+
+A resposta à pergunta do E1 é, portanto, negativa. O modelo que guarda o valor publicado registra a mudança, mas não a sua causa.
+
+\section{E2: derivação}\label{sec:res-e2}
+
+Todos os valores calculados a partir das premissas ficam dentro da margem definida para cada grandeza (Tabela~\ref{tab:res-e2}), e nenhum campo de valor derivado está guardado no banco. A diferença de 0,342~m em todas as distâncias declaradas é a mesma do comprimento, como prevê a Equação~\ref{eq:distancias-declaradas}.
+
+\begin{table}[htbp]
+    \centering
+    \caption{E2: valores calculados a partir das premissas e valores publicados.}
+    \label{tab:res-e2}
+    \begin{tabular}{l r r r r}
+        \toprule
+        Grandeza & Calculado & Publicado & Diferença & Margem \\
+        \midrule
+        Comprimento (m) & 2675,342 & 2675 & $+0{,}342$ & 0,919 \\
+        Azimute 16 ($^\circ$) & 134,935 & 134,93 & $+0{,}005$ & 0,014 \\
+        Azimute 34 ($^\circ$) & 314,927 & 314,92 & $+0{,}007$ & 0,014 \\
+        Rumo magnético 16 ($^\circ$) & 156,935 & 157 & $-0{,}065$ & 1,009 \\
+        Rumo magnético 34 ($^\circ$) & 336,927 & 337 & $-0{,}073$ & 1,009 \\
+        TORA, TODA e LDA 16 (m) & 2675,342 & 2675 & $+0{,}342$ & 0,919 \\
+        ASDA 16 (m) & 2958,342 & 2958 & $+0{,}342$ & 1,419 \\
+        TORA, TODA, ASDA e LDA 34 (m) & 2675,342 & 2675 & $+0{,}342$ & 0,919 \\
+        \bottomrule
+    \end{tabular}
+    \par\smallskip{\small Fonte: o autor, a partir de \citeonline{decea2026aip}.}
+\end{table}
+
+A remedição da cabeceira~34 gerou dois eventos. O primeiro registra o levantamento, com três campos. O segundo troca o referencial no aeródromo, com um único campo e o levantamento como causa. Nenhuma \textit{feature} com posição foi reescrita, seja a pista, as cabeceiras ou a zona de parada. O comprimento passou de 2675,342~m para 2676,195~m sem que nenhum número fosse digitado.
+
+Os cantos da pista e da zona de parada coincidem com o gabarito de Vincenty a menos de 3,3~nm, tanto com o referencial antigo quanto com o novo. O novo comprimento coincide com o gabarito a menos de 0,1~\textmu m. Ambas as diferenças ficam muito abaixo da exatidão de 0,5~mm do próprio gabarito.
+
+As duas perguntas do E2 têm, assim, resposta favorável à arquitetura. Os valores publicados se recalculam a partir das premissas dentro da precisão da AIP, e a troca de uma premissa não obriga a reescrever nenhum outro dado.
+
+\section{E3: reconstrução no tempo}\label{sec:res-e3}
+
+Em $t_a$, logo após a carga do eAIP, o referencial vigente é o original, e o comprimento derivado é de 2675,342~m. Ao fim do cenário, o referencial vigente é o novo, e o comprimento derivado passa a 2676,195~m.
+
+A interdição aparece como existente no instante em que foi escrita, 36 horas depois e um segundo antes do encerramento. Não aparece um segundo antes de ser escrita, no instante do encerramento nem um dia depois. O seu ciclo de vida compõe-se exatamente de um \texttt{BASELINE} e de um \texttt{VOID}, sem nenhum tipo de evento específico para o caráter temporário.
+
+O envelope da troca de referencial identifica o autor da afirmação (DECEA), o motivo (a remedição da cabeceira~34) e a causa (o levantamento, afirmado por outro autor). As distâncias declaradas calculadas depois da remedição para o instante $t_a$ são idênticas, \textit{bit} a \textit{bit}, às calculadas no próprio $t_a$. A diferença entre $t_a$ e o fim do cenário lista quatro campos, a saber, o identificador do referencial e os três campos do levantamento.
+
+O E3 confirma, portanto, que qualquer instante é reconstruído a partir do histórico, com autor, motivo e causa de cada mudança.
+
+\section{E4: evidência de adulteração}\label{sec:res-e4}
+
+A Tabela~\ref{tab:res-e4} resume os quatro ataques ao banco. A alteração de um evento no meio da cadeia é apontada no próprio evento. A exclusão de um evento, ou a inserção de um evento novo com \textit{hash} próprio correto, é apontada no evento seguinte, que perde a ligação com o anterior. A reescrita da cadeia a partir do evento alterado, com o recálculo de todos os \textit{hashes}, passa pela verificação interna e só é detectada pela âncora.
+
+\begin{table}[htbp]
+    \centering
+    \caption{E4: ataques ao banco e o que os detecta.}
+    \label{tab:res-e4}
+    \begin{tabularx}{\linewidth}{X l l}
+        \toprule
+        Ataque & Verificação interna & Âncora \\
+        \midrule
+        Alterar o corpo de um evento sem recalcular o \textit{hash} & aponta o evento & detecta \\
+        Apagar um evento & aponta o seguinte & detecta \\
+        Inserir um evento, com \textit{hash} próprio correto & aponta o seguinte & detecta \\
+        Alterar um evento e recalcular todos os \textit{hashes} até o fim & não aponta & detecta \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
+
+A resposta ao E4 é positiva, com um limite. Toda alteração no meio da cadeia é detectada pela verificação interna, mas a reescrita completa escapa a ela e só é detectada pela âncora externa.
+
+\section{E5: consistência e verificação}\label{sec:res-e5}
+
+Os dois produtos gerados do mesmo banco apresentam as mesmas distâncias em $t_a$, com ASDA~16 de 2958,342~m e LDA~34 de 2675,342~m. Ao fim do cenário, também coincidem, com 2959,195~m e 2676,195~m, e mudam juntos.
+
+O verificador independente declara a cadeia íntegra. Ele chega à mesma cabeça que a biblioteca e ao mesmo comprimento, 2676,1954~m, dentro da exatidão de Vincenty. No arquivo alterado, aponta exatamente o evento da pista.
+
+Durante o desenvolvimento, o mesmo verificador encontrou um erro na forma canônica da biblioteca. Números reais com valor inteiro acima de $2^{53}$ eram representados de forma diferente da prevista na RFC~8785 \cite{rfc8785}. O erro foi corrigido antes da execução final e não afetou nenhum resultado. O episódio mostra, contudo, o valor de uma implementação independente, pois a especificação só é de fato pública se outra implementação chega ao mesmo \textit{hash}.
+
+O E5 tem, assim, as duas respostas esperadas. Os produtos gerados do mesmo banco não divergem, e um terceiro verifica a integridade do registro sem recorrer à biblioteca.
+
+\section{E6: leitura separada}\label{sec:res-e6}
+
+Os resultados do E6 são apresentados por propriedade, na ordem da Seção~\ref{sec:procedimentos}.
+
+\paragraph{Equivalência.} O tópico recebeu nove eventos em onze mensagens, contando os corpos dos dois referenciais. Em todas as fronteiras de corte e nos três instantes testados, o consumidor apresenta os mesmos estados e as mesmas distâncias que o banco.
+
+\paragraph{Atomicidade.} O banco aceita como limite qualquer evento, inclusive um situado no meio da carga. Cortado logo após a pista e antes da zona de parada, ele informa uma ASDA~16 igual à TORA~16, de 2675,342~m, sem acusar nenhuma anomalia, quando o valor correto é de 2958,342~m. O consumidor, consultado no mesmo ponto, recua o corte para antes da carga. Responde, então, sem nenhuma \textit{feature} e recusa os derivados por falta de referencial. Nenhum corte do consumidor cai dentro da carga.
+
+\paragraph{Recorte.} O consumidor que assina apenas a cabeceira~16 aplica o fecho de cinco \textit{features}, em vez de seis, e deixa de fora apenas o levantamento. Os estados das \textit{features} do recorte e o \textit{hash} dos derivados coincidem com os do consumidor que lê tudo.
+
+\paragraph{Limite explícito e disponibilidade.} Consultado sobre a restrição nova antes de recebê-la, o consumidor recusa a leitura e informa até onde recebeu. Depois de recebê-la, responde incluindo a restrição. Com o banco fechado, a mesma consulta produz a mesma resposta.
+
+\paragraph{Determinismo.} No mesmo limite, os seis consumidores chegam ao mesmo \textit{hash}, tanto ao fim do cenário quanto em $t_a$.
+
+\paragraph{Canal adulterado.} A Tabela~\ref{tab:res-e6} resume os seis ataques ao tópico. Toda adulteração no meio do tópico interrompe o consumo, e o consumidor permanece em um prefixo fiel ao banco. As duas últimas linhas mostram o mesmo limite observado no E4. O tópico cortado no fim parece apenas atrasado, e o evento falso anexado ao fim passa pela verificação da ligação e é aplicado. Em todos os seis ataques, a cabeça do consumidor difere da âncora, e é apenas por essa comparação que os dois últimos são detectados.
+
+\begin{table}[htbp]
+    \centering
+    \caption{E6: ataques ao tópico e o comportamento do consumidor.}
+    \label{tab:res-e6}
+    \begin{tabularx}{\linewidth}{X c c l}
+        \toprule
+        Ataque & Para? & Fiel ao banco? & Motivo \\
+        \midrule
+        Trocar o referencial na mensagem, sem recalcular o \textit{hash} & sim & sim & \textit{hash} não confere \\
+        Trocar o referencial e recalcular o \textit{hash} da mensagem & sim & sim & ligação quebrada \\
+        Remover a mensagem & sim & sim & ligação quebrada \\
+        Inserir um evento falso depois dela, com ligação e \textit{hash} corretos & sim & sim & \makecell[l]{bifurcação; volta ao\\ ponto comum} \\
+        Remover as últimas mensagens & não & sim & -- \\
+        Anexar ao fim um evento falso, com ligação e \textit{hash} corretos & não & não & -- \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
+
+A resposta ao E6 é positiva, com o mesmo limite do E4. Quem lê pelo tópico chega à mesma resposta que o banco, nunca observa uma mudança pela metade e percebe qualquer adulteração no meio do canal. O corte e a anexação no fim escapam à cadeia e só são detectados pela âncora.
+
+\section{Banco extraído}\label{sec:res-banco}
+
+A exportação mostrou-se fiel. As duas cadeias, \texttt{aixm}, com dois eventos, e \texttt{sbsj}, com dez, estão íntegras no arquivo e têm a mesma cabeça que na biblioteca. O comprimento calculado pelo verificador a partir do referencial exportado coincide com o da biblioteca, 2676,1954~m. A consulta de estado no SQLite, feita apenas com as visões do arquivo, produz o mesmo resultado que a biblioteca em todos os 82 pares de corte e \textit{feature}.
+
+Com o arquivo, parte da avaliação deixa de depender da biblioteca. A mudança sem causa do E1, o estado em qualquer instante e a trilha de causa do E3 e a verificação por terceiros do E5 tornam-se consultas e programas curtos sobre um arquivo público \cite{aeroledger_dataset}.
+
+O E4 sai fortalecido. Qualquer pessoa pode remover os gatilhos ou editar os \textit{bytes} do arquivo, e a alteração só é detectada recalculando os \textit{hashes}. Isso evidencia que o arquivo oferece evidência de adulteração, e não proteção contra ela. O E2 fica em posição intermediária. O comprimento resulta do referencial com qualquer implementação da geodésica, mas as distâncias declaradas dependem da regra implementada na biblioteca. As propriedades da escrita, como a recusa de um evento malformado e a gravação de um grupo inteiro, continuam sendo verificadas apenas pelos testes da biblioteca.
+
+\section{Síntese}\label{sec:res-sintese}
+
+Os seis experimentos foram aprovados segundo os critérios definidos antes da execução. A Tabela~\ref{tab:res-sintese} reúne as respostas e, para cada uma, o que permanece fora do alcance demonstrado.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Síntese dos experimentos.}
+    \label{tab:res-sintese}
+    \begin{tabularx}{\linewidth}{l X X}
+        \toprule
+        Experimento & Resposta & O que fica de fora \\
+        \midrule
+        E1 Causa (contraste) & não; 12 campos mudam sem causa & -- \\
+        E2 Derivação & valores recalculados dentro da precisão da AIP; a remedição escreve apenas o levantamento e a troca de referencial & regra para barreira de contenção \\
+        E3 Reconstrução no tempo & qualquer instante reconstruído, com autor, motivo e causa & consulta pelo tempo do fato \\
+        E4 Evidência de adulteração & alterações no meio da cadeia detectadas & reescrita completa, detectada apenas pela âncora \\
+        E5 Consistência e verificação & produtos não divergem; terceiro verifica sem a biblioteca & autoria registrada, mas não comprovada \\
+        E6 Leitura separada & mesma resposta, nunca pela metade, canal adulterado percebido & corte ou anexação no fim, detectados apenas pela âncora \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
+
+\section{Limites da avaliação}\label{sec:res-limites}
+
+O alcance dos resultados é restrito, em primeiro lugar, pelo escopo do estudo. A avaliação usa um único estudo de caso, com uma pista de um aeródromo, e a composição de várias pistas e de outros elementos do lado ar é argumentada, mas não medida. O cenário é também parcialmente simulado. As premissas e os valores de comparação são reais, mas a remedição e as restrições não ocorreram.
+
+Parte da arquitetura, além disso, não foi implementada. A biblioteca e o consumidor devolvem a cabeça da cadeia, mas a âncora foi guardada pelos próprios experimentos, e nenhum mecanismo a publica ou a compara automaticamente. Sem a norma de preenchimento, a falta de zona de parada, de zona livre de obstáculos ou de deslocamento de cabeceira resulta em zero, e não em recusa. A escrita serializada por bloqueio pessimista não foi testada com várias fontes escrevendo simultaneamente, e as alternativas propostas não foram implementadas. O tópico, mantido em memória, não permite avaliar o transporte real, o custo em escala, os tópicos derivados nem a confidencialidade.
+
+Alguns aspectos, por fim, não foram medidos. O volume do estudo de caso é pequeno demais para conclusões sobre o custo de leitura. A interoperabilidade entre organizações não pode ser testada com um único publicador, e o E5 e o E6 mostram as condições para ela, e não a interoperabilidade em si. O motor de geometria não foi comparado com as cartas oficiais e não entra em nenhum resultado. O Capítulo~\ref{chap:discussao} discute o significado desses resultados e limites em relação à pergunta de pesquisa.
