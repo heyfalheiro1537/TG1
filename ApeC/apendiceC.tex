@@ -1,0 +1,35 @@
+Este apêndice descreve como repetir os experimentos a partir dos repositórios públicos. A biblioteca avaliada \cite{aeroledger} e o \textit{notebook} de experimentos \cite{aeroledger_experimentos} ficam em repositórios separados. O \textit{notebook} instala a biblioteca fixada no \textit{commit} usado na avaliação, de modo que uma nova execução usa exatamente o código avaliado.
+
+\section{Requisitos}
+
+A execução requer Python~3.12 ou superior e PostgreSQL~14 ou superior. A extensão espacial PostGIS não é necessária. O \textit{notebook} recria do zero, a cada execução, um banco chamado \texttt{aeroledger\_experimentos}. Para usar outro servidor, basta definir a variável de ambiente \texttt{AEROLEDGER\_DSN\_ADMIN} com uma conexão ao banco \texttt{postgres} que tenha permissão para criar bancos.
+
+\section{Execução}
+
+Os comandos a seguir obtêm o repositório, instalam as dependências, sobem um PostgreSQL local e executam o \textit{notebook}.
+
+\begin{verbatim}
+git clone https://github.com/heyfalheiro1537/aeroledger_notebook
+cd aeroledger_notebook
+pip install -r requirements.txt  # biblioteca no commit avaliado
+scripts/pg_local.sh              # PostgreSQL em localhost:54329
+                                 # ou: docker compose up -d
+scripts/rodar.sh                 # executa o notebook
+python3 -m pytest -q             # notebook, gabarito, verificador
+\end{verbatim}
+
+O \textit{notebook} também pode ser aberto de forma interativa, com \texttt{jupyter lab experimentos.ipynb}, e executado do início ao fim. As verificações do Apêndice~\ref{ape:testes} ficam nas últimas células e imprimem uma confirmação por experimento.
+
+\section{Arquivos}
+
+O repositório de experimentos contém, além do \textit{notebook}:
+\begin{itemize}
+    \item \texttt{fontes.py}, com os dados do SBSJ e a fonte de cada um;
+    \item \texttt{apoio.py}, com funções auxiliares de banco, referencial e exportação;
+    \item \texttt{ataques.py}, com os ataques do E4, ao banco, e do E6, ao tópico;
+    \item \texttt{geodesia.py}, com o gabarito geodésico de Vincenty, escrito sem a biblioteca;
+    \item \texttt{verificador\_independente.py}, que confere a cadeia e o comprimento a partir do registro exportado, também sem a biblioteca;
+    \item \texttt{tests/}, com os testes que executam o \textit{notebook}, conferem o gabarito em um caso publicado e comparam a forma canônica do verificador com a da biblioteca.
+\end{itemize}
+
+O banco extraído do SBSJ \cite{aeroledger_dataset} permite repetir parte da avaliação sem nenhuma dessas ferramentas, apenas com consultas SQL sobre o arquivo (Seção~\ref{sec:res-banco}).

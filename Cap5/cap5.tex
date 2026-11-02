@@ -4,7 +4,7 @@ Este capítulo apresenta os resultados dos seis experimentos, na ordem em que fo
 
 Entre a AOC de 2022 e a ADC de 2026, mudam doze campos (Tabela~\ref{tab:res-e1}), e nenhum deles traz causa. O registro informa quem publicou cada valor e em que edição, mas não por que o número mudou.
 
-A alteração do comprimento da pista, de 2676 para 2675~m, aparece como sete números editados separadamente. Isso ocorre porque as distâncias declaradas estão guardadas, e não calculadas. As alterações da zona de parada e da faixa de pista não têm explicação em nenhuma das duas publicações.
+A alteração do comprimento da pista, de 2676 para 2675~m, repete-se em sete distâncias declaradas, além do próprio comprimento, e cada uma é editada separadamente. Isso ocorre porque as distâncias declaradas estão guardadas, e não calculadas. As alterações da zona de parada e da faixa de pista não têm explicação em nenhuma das duas publicações.
 
 \begin{table}[htbp]
     \centering
@@ -61,11 +61,11 @@ As duas perguntas do E2 têm, assim, resposta favorável à arquitetura. Os valo
 
 \section{E3: reconstrução no tempo}\label{sec:res-e3}
 
-Em $t_a$, logo após a carga do eAIP, o referencial vigente é o original, e o comprimento derivado é de 2675,342~m. Ao fim do cenário, o referencial vigente é o novo, e o comprimento derivado passa a 2676,195~m.
+Em $t_a$, logo após a carga do eAIP, o referencial vigente é o original, e o comprimento derivado é de 2675,342~m. Depois da remedição, o referencial vigente é o novo, e o comprimento derivado passa a 2676,195~m.
 
 A interdição aparece como existente no instante em que foi escrita, 36 horas depois e um segundo antes do encerramento. Não aparece um segundo antes de ser escrita, no instante do encerramento nem um dia depois. O seu ciclo de vida compõe-se exatamente de um \texttt{BASELINE} e de um \texttt{VOID}, sem nenhum tipo de evento específico para o caráter temporário.
 
-O envelope da troca de referencial identifica o autor da afirmação (DECEA), o motivo (a remedição da cabeceira~34) e a causa (o levantamento, afirmado por outro autor). As distâncias declaradas calculadas depois da remedição para o instante $t_a$ são idênticas, \textit{bit} a \textit{bit}, às calculadas no próprio $t_a$. A diferença entre $t_a$ e o fim do cenário lista quatro campos, a saber, o identificador do referencial e os três campos do levantamento.
+O envelope da troca de referencial identifica o autor da afirmação (DECEA), o motivo (a remedição da cabeceira~34) e a causa (o levantamento, afirmado por outro autor). As distâncias declaradas calculadas depois da remedição para o instante $t_a$ são idênticas, \textit{bit} a \textit{bit}, às calculadas no próprio $t_a$. A diferença entre $t_a$ e o fim do E3 lista quatro campos, a saber, o identificador do referencial e os três campos do levantamento.
 
 O E3 confirma, portanto, que qualquer instante é reconstruído a partir do histórico, com autor, motivo e causa de cada mudança.
 
@@ -94,7 +94,7 @@ A resposta ao E4 é positiva, com um limite. Toda alteração no meio da cadeia 
 
 \section{E5: consistência e verificação}\label{sec:res-e5}
 
-Os dois produtos gerados do mesmo banco apresentam as mesmas distâncias em $t_a$, com ASDA~16 de 2958,342~m e LDA~34 de 2675,342~m. Ao fim do cenário, também coincidem, com 2959,195~m e 2676,195~m, e mudam juntos.
+Os dois produtos gerados do mesmo banco apresentam as mesmas distâncias em $t_a$, com ASDA~16 de 2958,342~m e LDA~34 de 2675,342~m. Depois da remedição, também coincidem, com 2959,195~m e 2676,195~m, e mudam juntos.
 
 O verificador independente declara a cadeia íntegra. Ele chega à mesma cabeça que a biblioteca e ao mesmo comprimento, 2676,1954~m, dentro da exatidão de Vincenty. No arquivo alterado, aponta exatamente o evento da pista.
 
@@ -106,17 +106,17 @@ O E5 tem, assim, as duas respostas esperadas. Os produtos gerados do mesmo banco
 
 Os resultados do E6 são apresentados por propriedade, na ordem da Seção~\ref{sec:procedimentos}.
 
-\paragraph{Equivalência.} O tópico recebeu nove eventos em onze mensagens, contando os corpos dos dois referenciais. Em todas as fronteiras de corte e nos três instantes testados, o consumidor apresenta os mesmos estados e as mesmas distâncias que o banco.
+\paragraph*{Equivalência.} O tópico recebeu, inicialmente, os nove eventos escritos até o E5, em onze mensagens, contando os corpos dos dois referenciais. O décimo evento é a restrição escrita durante o próprio E6. Em todas as fronteiras de corte e nos três instantes testados, o consumidor apresenta os mesmos estados e as mesmas distâncias que o banco.
 
-\paragraph{Atomicidade.} O banco aceita como limite qualquer evento, inclusive um situado no meio da carga. Cortado logo após a pista e antes da zona de parada, ele informa uma ASDA~16 igual à TORA~16, de 2675,342~m, sem acusar nenhuma anomalia, quando o valor correto é de 2958,342~m. O consumidor, consultado no mesmo ponto, recua o corte para antes da carga. Responde, então, sem nenhuma \textit{feature} e recusa os derivados por falta de referencial. Nenhum corte do consumidor cai dentro da carga.
+\paragraph*{Atomicidade.} O banco aceita como limite qualquer evento, inclusive um situado no meio da carga. Cortado logo após a pista e antes da zona de parada, ele informa uma ASDA~16 igual à TORA~16, de 2675,342~m, sem acusar nenhuma anomalia, quando o valor correto é de 2958,342~m. O consumidor, consultado no mesmo ponto, recua o corte para antes da carga. Responde, então, sem nenhuma \textit{feature} e recusa os derivados por falta de referencial. Nenhum corte do consumidor cai dentro da carga.
 
-\paragraph{Recorte.} O consumidor que assina apenas a cabeceira~16 aplica o fecho de cinco \textit{features}, em vez de seis, e deixa de fora apenas o levantamento. Os estados das \textit{features} do recorte e o \textit{hash} dos derivados coincidem com os do consumidor que lê tudo.
+\paragraph*{Recorte.} O consumidor que assina apenas a cabeceira~16 aplica o fecho de cinco \textit{features}, em vez de seis, e deixa de fora apenas o levantamento. Os estados das \textit{features} do recorte e o \textit{hash} dos derivados coincidem com os do consumidor que lê tudo.
 
-\paragraph{Limite explícito e disponibilidade.} Consultado sobre a restrição nova antes de recebê-la, o consumidor recusa a leitura e informa até onde recebeu. Depois de recebê-la, responde incluindo a restrição. Com o banco fechado, a mesma consulta produz a mesma resposta.
+\paragraph*{Limite explícito e disponibilidade.} Consultado sobre a restrição nova antes de recebê-la, o consumidor recusa a leitura e informa até onde recebeu. Depois de recebê-la, responde incluindo a restrição. Com o banco fechado, a mesma consulta produz a mesma resposta.
 
-\paragraph{Determinismo.} No mesmo limite, os seis consumidores chegam ao mesmo \textit{hash}, tanto ao fim do cenário quanto em $t_a$.
+\paragraph*{Determinismo.} No mesmo limite, os seis consumidores chegam ao mesmo \textit{hash}, tanto ao fim do cenário quanto em $t_a$.
 
-\paragraph{Canal adulterado.} A Tabela~\ref{tab:res-e6} resume os seis ataques ao tópico. Toda adulteração no meio do tópico interrompe o consumo, e o consumidor permanece em um prefixo fiel ao banco. As duas últimas linhas mostram o mesmo limite observado no E4. O tópico cortado no fim parece apenas atrasado, e o evento falso anexado ao fim passa pela verificação da ligação e é aplicado. Em todos os seis ataques, a cabeça do consumidor difere da âncora, e é apenas por essa comparação que os dois últimos são detectados.
+\paragraph*{Canal adulterado.} A Tabela~\ref{tab:res-e6} resume os seis ataques ao tópico. Toda adulteração no meio do tópico interrompe o consumo, e o consumidor permanece em um prefixo fiel ao banco. As duas últimas linhas mostram o mesmo limite observado no E4. O tópico cortado no fim parece apenas atrasado, e o evento falso anexado ao fim passa pela verificação da ligação e é aplicado. Em todos os seis ataques, a cabeça do consumidor difere da âncora, e é apenas por essa comparação que os dois últimos são detectados.
 
 \begin{table}[htbp]
     \centering
