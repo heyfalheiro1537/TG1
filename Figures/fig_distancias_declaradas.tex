@@ -49,7 +49,7 @@
         \centering
         \begin{tikzpicture}[
             >={Stealth[length=2mm]},
-            node distance=4mm and 7mm,
+            node distance=4mm and 6mm,
             premissa/.style={draw, rounded corners=2pt, align=center, font=\footnotesize,
                              minimum height=9mm, text width=31mm},
             derivado/.style={premissa, fill=gray!20},
@@ -61,8 +61,8 @@
             \node[distancia, below=of toda] (asda) {ASDA $= L + \mathrm{SWY}$};
             \node[distancia, below=of asda] (lda)  {LDA $= L - d$};
             % barramento do comprimento
-            \coordinate (bus) at ($(tora.west)!0.5!(lda.west) + (-7mm,0)$);
-            \node[derivado, left=7mm of bus] (L) {comprimento $L$\\ \scriptsize geodésica entre as cabeceiras};
+            \coordinate (bus) at ($(tora.west)!0.5!(lda.west) + (-6mm,0)$);
+            \node[derivado, left=6mm of bus] (L) {comprimento $L$\\ \scriptsize geodésica entre as cabeceiras};
             \node[premissa, left=of L] (cab) {cabeceiras\\ \scriptsize posição e elevação\\ \scriptsize medidas};
             \draw[->] (cab) -- (L);
             \draw (L.east) -- (bus);
