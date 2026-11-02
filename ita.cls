@@ -137,7 +137,7 @@
 \if@eng
    \RequirePackage[english]{babel}
 \else
-   \RequirePackage[english,portuges,brazil]{babel}
+   \RequirePackage[english,portuguese,brazil, brazilian]{babel}
 \fi
 
  \if@eng
