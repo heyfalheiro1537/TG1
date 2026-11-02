@@ -1,0 +1,5 @@
+Este apêndice reproduz o esquema do banco extraído do SBSJ (Seção~\ref{sec:banco-extraido}), mantido no repositório de experimentos \cite{aeroledger_experimentos} como \texttt{sbsj\_ledger.sql}. O esquema requer o SQLite~3.45 ou superior, que guarda JSON em formato binário (JSONB). Ele define as quatro tabelas, os gatilhos que impedem a atualização e a exclusão, exigem o encadeamento e conferem a forma das linhas do corpo, as visões de leitura e, ao final, as consultas de exemplo, comentadas.
+
+{\scriptsize
+\VerbatimInput[frame=lines, numbers=left, numbersep=4pt, framesep=2mm]{ApeB/sbsj_ledger.sql}
+}
