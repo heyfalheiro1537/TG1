@@ -1,115 +1,140 @@
-Este capítulo apresenta os fundamentos em que o trabalho se apoia. A Seção~\ref{sec:info-aero} trata da informação aeronáutica, isto é, de como é publicada, que requisitos de qualidade deve atender e como os modelos de intercâmbio a representam. A Seção~\ref{sec:geo} apresenta o referenciamento linear e os conceitos de geodésia necessários para calcular comprimentos a partir de posições medidas. As Seções~\ref{sec:temporal} a~\ref{sec:adulteracao} tratam dos modelos de dados que retêm histórico: os bancos de dados temporais, o padrão \textit{event sourcing}, os registros imutáveis dos sistemas financeiros e os mecanismos de evidência de adulteração. A Seção~\ref{sec:distribuidos} discute os compromissos entre consistência e disponibilidade em sistemas distribuídos, e a Seção~\ref{sec:sintese-fund} relaciona esses fundamentos às escolhas deste trabalho.
+Este capítulo descreve como o trabalho foi conduzido e como a proposta é avaliada. A Seção~\ref{sec:dsr} apresenta a abordagem de pesquisa. A Seção~\ref{sec:requisitos} define os requisitos que a solução deve atender, antes de qualquer escolha de arquitetura. A Seção~\ref{sec:caso} apresenta o estudo de caso e os dados utilizados, e a Seção~\ref{sec:experimentos}, os experimentos e os seus critérios de aprovação. As Seções~\ref{sec:validacao} e~\ref{sec:reprodutibilidade} tratam, por fim, de como a avaliação evita conferir a solução contra ela mesma e de como pode ser reproduzida.
 
-\section{Informação aeronáutica}\label{sec:info-aero}
+\section{Abordagem de pesquisa}\label{sec:dsr}
 
-\subsection{Produtos, ciclo AIRAC e qualidade dos dados}\label{sec:produtos}
+O trabalho segue a pesquisa em ciência do design (\textit{design science research}, DSR), em que o conhecimento resulta da construção e da avaliação de um artefato dirigido a um problema identificado \cite{hevner2004}. O artefato, aqui, é a arquitetura de dados e a sua implementação. As etapas adotadas são as propostas por \citeonline{peffers2007}, e a Tabela~\ref{tab:dsr-etapas} indica onde cada uma é tratada.
 
-O Anexo~15 à Convenção de Aviação Civil Internacional e os Procedimentos para os Serviços de Navegação Aérea -- Gestão da Informação Aeronáutica (PANS-AIM) organizam a informação aeronáutica em produtos \cite{icao2018anexo15,icao2018pansaim}. Entre eles estão a Publicação de Informação Aeronáutica (AIP), com as suas emendas e suplementos, os NOTAM, as cartas aeronáuticas e, de forma crescente, os conjuntos de dados digitais. As alterações operacionalmente significativas seguem o ciclo AIRAC (\textit{Aeronautical Information Regulation and Control}). Nesse ciclo, as datas de efetividade são comuns a todos os Estados e espaçadas de 28 dias, e a publicação ocorre com antecedência mínima de 42 dias, para que os usuários possam se preparar antes da entrada em vigor. Cada emenda substitui o conteúdo afetado da edição anterior. O produto publicado representa, assim, o estado dos dados na sua data de efetividade.
+\begin{table}[htbp]
+    \centering
+    \caption{Etapas da pesquisa em ciência do design e a sua localização no trabalho.}
+    \label{tab:dsr-etapas}
+    \begin{tabularx}{\linewidth}{X l}
+        \toprule
+        Etapa & Onde é tratada \\
+        \midrule
+        Identificação do problema e motivação & Capítulo~\ref{chap:introducao} \\
+        Definição dos objetivos da solução & Seção~\ref{sec:requisitos} \\
+        Projeto e desenvolvimento do artefato & Seções~\ref{sec:visao-geral} a~\ref{sec:implementacao} \\
+        Demonstração & Seção~\ref{sec:aplicacao-sbsj} \\
+        Avaliação & Seção~\ref{sec:experimentos} e Capítulo~\ref{chap:resultados} \\
+        Comunicação & este texto, a biblioteca e o banco extraído \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor, a partir de \citeonline{peffers2007}.}
+\end{table}
 
-O Anexo~4 define o propósito de cada carta aeronáutica \cite{icao_anexo4}. A Carta de Obstáculos de Aeródromo -- Tipo~A (AOC) fornece ao operador os dados de obstáculos necessários para cumprir as limitações de desempenho na decolagem. A Carta de Aeródromo (ADC) reúne as informações que facilitam a movimentação das aeronaves no solo, entre as posições de estacionamento e a pista, além de informações operacionais essenciais do aeródromo. Os dois produtos compartilham parte dos dados, como o comprimento da pista e as distâncias declaradas. Cada um, porém, os apresenta segundo a sua finalidade e na data da sua própria emenda.
+A avaliação é feita por falseamento. Cada propriedade da hipótese é traduzida em uma pergunta de resposta sim ou não, com um critério de aprovação fixado antes da execução. Um experimento reprovado refutaria a propriedade correspondente no caso estudado. Um experimento aprovado não a prova em geral, mas mostra que a arquitetura a sustenta nas condições declaradas.
 
-O Anexo~15 e o PANS-AIM estabelecem requisitos de qualidade para os dados aeronáuticos, que abrangem exatidão, resolução, integridade, rastreabilidade, oportunidade, completude e formato \cite{icao2018anexo15,icao2018pansaim}. Dois desses requisitos interessam diretamente a este trabalho. A integridade é o grau de garantia de que um dado e o seu valor não foram perdidos nem alterados desde a sua origem ou desde uma emenda autorizada. Os dados são classificados em rotineiros, essenciais e críticos, conforme o risco associado ao seu uso incorreto. A rastreabilidade é a capacidade de reconstituir a história, a aplicação ou a localização daquilo que se considera, e deve ser assegurada ao longo de toda a cadeia de dados. O PANS-AIM exige, além disso, consistência entre os produtos de informação aeronáutica.
+\section{Requisitos do artefato}\label{sec:requisitos}
 
-Esses requisitos recaem sobre os provedores do serviço e sobre a sua cadeia de produção. O produto que chega ao usuário, contudo, apresenta os valores vigentes sem carregar a trilha que permitiria reconstituí-los.
+Os requisitos descrevem um serviço de dados auditável como uma caixa-preta, isto é, pelas perguntas que ele precisa responder, e não pela forma como as responde. Definidos antes da arquitetura, eles evitam que a solução proposta justifique o próprio problema. A Tabela~\ref{tab:requisitos} os resume, e as subseções seguintes os detalham. O Capítulo~\ref{chap:solucao} mostra, depois, o mecanismo que atende a cada um.
 
-\subsection{Distâncias declaradas}\label{sec:distancias}
+\begin{table}[htbp]
+    \centering
+    \caption{Requisitos de um serviço de dados auditável.}
+    \label{tab:requisitos}
+    \begin{tabularx}{\linewidth}{l X}
+        \toprule
+        Requisito & O serviço deve \\
+        \midrule
+        R1 Origem de cada valor & informar quem afirmou cada valor, por quê e com base em quais premissas \\
+        R2 Reconstrução no tempo & reconstruir o conteúdo de qualquer produto em qualquer instante passado \\
+        R3 Consistência entre produtos & impedir que dois produtos referentes ao mesmo instante divirjam \\
+        R4 Mínimo de informação & guardar apenas o que não pode ser calculado a partir de outros dados \\
+        R5 Posição relativa & registrar posições em relação a pontos medidos, de modo que uma nova medição se propague \\
+        R6 Estrutura comum e conteúdo flexível & exigir uma forma mínima comum a todos os elementos e aceitar o restante sem esquema fixo \\
+        R7 Verificação por terceiro & permitir que quem recebe os dados confira a sua integridade sem confiar em quem os publica \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
 
-O Anexo~14 define as distâncias declaradas de uma pista, que correspondem aos comprimentos disponíveis para cada fase da operação e são publicadas para cada direção de pista \cite{icao2022anexo14}. A distância disponível para corrida de decolagem (TORA, \textit{take-off run available}) é o comprimento de pista declarado disponível e adequado para a corrida no solo de uma aeronave em decolagem. A distância disponível para decolagem (TODA, \textit{take-off distance available}) acrescenta à TORA o comprimento da zona livre de obstáculos (\textit{clearway}, CWY), quando houver. De modo análogo, a distância disponível para aceleração e parada (ASDA, \textit{accelerate-stop distance available}) acrescenta à TORA o comprimento da zona de parada (\textit{stopway}, SWY). A distância disponível para pouso (LDA, \textit{landing distance available}) é o comprimento de pista declarado disponível e adequado para a corrida no solo de uma aeronave em pouso.
+\subsection{R1: origem de cada valor}\label{sec:req-origem}
 
-A zona de parada é uma área retangular além do fim da TORA, preparada para que uma aeronave possa parar em caso de decolagem abortada. Sobre a zona livre de obstáculos, a aeronave pode completar parte da subida inicial. Quando a cabeceira é deslocada, a LDA é reduzida do comprimento do deslocamento. As distâncias declaradas não são, portanto, medidas independentes. Elas resultam do comprimento da pista, das dimensões dessas áreas e da posição das cabeceiras, segundo regras normativas.
+O serviço deve informar, para cada valor, quem o afirmou, por que motivo e com base em quais premissas. Essa é a pergunta central de uma auditoria e a que as publicações atuais não respondem (Capítulo~\ref{chap:introducao}). Um valor sem autor e sem causa pode estar correto, mas não pode ser auditado.
 
-\subsection{AIXM}\label{sec:aixm}
+\subsection{R2: reconstrução no tempo}\label{sec:req-tempo}
 
-O AIXM (\textit{Aeronautical Information Exchange Model}) é o modelo de referência para o intercâmbio digital de informação aeronáutica, desenvolvido pela EUROCONTROL e pela \textit{Federal Aviation Administration} (FAA). O modelo tem dois componentes. O primeiro é um modelo lógico em UML, com as entidades necessárias à navegação aérea. O segundo é um esquema XML baseado em GML, para a troca de dados entre sistemas \cite{eurocontrol2016aixm}. A versão 5.1.1 é a mais usada em operação.
+O serviço deve reconstruir o conteúdo de qualquer produto em qualquer instante passado, sem depender de que o usuário tenha guardado a edição correspondente. Este trabalho adota um único eixo de tempo, o de transação (Seção~\ref{sec:bitemporal}), por dois motivos. O primeiro é documental. O que se pretende auditar é o que foi oficialmente afirmado em cada instante, e o tempo de transação responde exatamente a isso. O segundo é metodológico. O segundo eixo traz complexidade própria, como a consulta em duas dimensões e o fim de validade calculável apenas na leitura, que exigiria uma avaliação à parte.
 
-O aspecto do AIXM mais relevante para este trabalho é o seu modelo de temporalidade \cite{eurocontrol2021temporality}. Cada \textit{Feature}, como uma pista ou uma cabeceira, tem identidade própria e é descrita por uma sequência de \textit{TimeSlices}, cada uma com um período de validade e uma interpretação. A interpretação \texttt{BASELINE} descreve o estado completo a partir de um instante, e \texttt{PERMDELTA}, uma alteração permanente. \texttt{TEMPDELTA} descreve uma alteração temporária, como a de um NOTAM, que se sobrepõe ao estado de base e expira. \texttt{SNAPSHOT}, por fim, apresenta o estado resultante em um instante, para consulta. Cada \textit{TimeSlice} traz ainda um \texttt{sequenceNumber}, que ordena as versões, e um \texttt{correctionNumber}, que identifica correções de uma versão já emitida. Os dados podem ser acompanhados de anotações em texto livre.
+O tempo de validade fica, assim, como extensão. Ele importa porque, sem ele, um erro de dado pode passar por erro operacional. Uma sinalização ou uma distância publicadas de forma errada levam os operadores a criar hábitos para compensá-las, e o registro não mostra que a condição real era outra desde o início.
 
-O AIXM tem, portanto, noção de tempo e uma disciplina de correção, mas há três aspectos que ele não garante. O primeiro é a retenção do histórico. O modelo permite representar versões e correções, mas não obriga quem publica a mantê-las, e um serviço de consulta pode devolver apenas o estado corrente. O segundo é a evidência de adulteração, já que nada no modelo permite a quem recebe os dados verificar que uma versão antiga não foi alterada depois de publicada. O terceiro é o registro das premissas e da causa de cada mudança. Valores como as distâncias declaradas são publicados como números, sem indicação das medições que os originaram, e a razão de uma alteração, quando existe, fica em texto livre.
+\subsection{R3: consistência entre produtos}\label{sec:req-consistencia}
 
-\subsection{Ferramentas de projeto e de SIG}\label{sec:sig}
+Dois produtos referentes ao mesmo instante não podem divergir. O PANS-AIM já exige consistência entre os produtos de informação aeronáutica \cite{icao2018pansaim}. O requisito torna essa exigência verificável. Quando dois produtos divergem, deve ser possível identificar se a causa é o instante consultado ou a regra de cálculo aplicada.
 
-Ferramentas de projeto, como CAD e BIM, e sistemas de informação geográfica (SIG) são as fontes mais comuns dos dados aeroportuários. O \textit{ArcGIS Aviation Airports}, da Esri, por exemplo, gera superfícies limitadoras de obstáculos de forma paramétrica, a partir do eixo e da classificação da pista, e exporta dados em AIXM \cite{esri2024}. Nessas ferramentas, o resultado do cálculo é persistido como dado primário, e é a superfície gerada, ou o desenho, que se guarda e se distribui. A relação entre esse resultado e as medições que o originaram não fica registrada. Quando existe versionamento, ele é feito sobre arquivos ou tabelas, sem registro estruturado da causa de cada alteração.
+\subsection{R4: mínimo de informação}\label{sec:req-minimo}
 
-\section{Referenciamento linear e geodésia}\label{sec:geo}
+O serviço deve guardar apenas o que não pode ser calculado a partir de outros dados. Comprimentos, azimutes e distâncias declaradas resultam de posições medidas e de regras normativas (Seção~\ref{sec:distancias}). Guardá-los ao lado das premissas cria duas fontes para a mesma informação, que podem se contradizer.
 
-\subsection{Referenciamento linear (ISO 19148)}\label{sec:iso19148}
+O SBSJ ilustra esse risco (Figura~\ref{fig:aip-ad212}). Na seção AD~2.12 da AIP, as observações sobre a pista mencionam a cabeceira~34 como deslocada. Na seção AD~2.13, contudo, a LDA da direção~34 é igual à TORA, o que corresponde a um deslocamento nulo. O texto e a tabela não podem estar ambos certos, e a publicação não permite saber qual dos dois prevalece. Quando a LDA é calculada a partir do deslocamento, registrado como premissa, essa contradição deixa de ser possível.
 
-A ISO~19148 define como expressar posições ao longo de elementos lineares, independentemente do sistema de coordenadas \cite{iso19148}. Nesse modelo, o elemento linear estabelece a direção de medição, e um referente (\textit{Referent}), ponto conhecido sobre o elemento, estabelece a origem. A posição é então dada pela distância ao longo do elemento (\textit{DistanceExpression}) e pelos afastamentos lateral e vertical em relação a ele (\textit{LateralOffsetExpression} e \textit{VerticalOffsetExpression}). Na forma geral,
-\begin{equation}
-    p = f(e,\, r,\, s,\, o,\, v)
-    \label{eq:lrs}
-\end{equation}
-em que $e$ é o elemento linear, $r$ o referente, $s$ a distância ao longo do elemento, $o$ o afastamento lateral e $v$ o afastamento vertical.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{Figures/aip212.png}
+    \caption{Observações da seção AD~2.12 e distâncias declaradas da seção AD~2.13 da AIP do SBSJ.}
+    \label{fig:aip-ad212}
+    \par\smallskip{\small Fonte: \citeonline{decea2026aip}.}
+\end{figure}
 
-O referenciamento linear é usado há décadas em rodovias e ferrovias, em que a posição de um elemento é expressa por um marco quilométrico e um afastamento. As posições, nesse modelo, não guardam coordenadas próprias, e sim uma relação com o referente. Uma nova medição do referente desloca, assim, todas as posições que dependem dele, sem que nenhuma delas precise ser reescrita.
+\subsection{R5: posição relativa}\label{sec:req-posicao}
 
-\subsection{Distâncias sobre o elipsoide}\label{sec:geodesia}
+As posições devem ser registradas em relação a pontos efetivamente medidos, e não por coordenadas próprias. Uma nova medição de um desses pontos deve, então, propagar-se a todas as posições que dependem dele, sem que nenhuma delas precise ser reescrita. É a propriedade do referenciamento linear (Seção~\ref{sec:iso19148}) aplicada ao lado ar.
 
-Coordenadas geográficas são expressas em relação a um referencial geodésico. No Brasil, o referencial oficial é o SIRGAS2000 \cite{ibge2005sirgas}, que adota o elipsoide GRS80. Sobre o elipsoide, a menor distância entre dois pontos é a geodésica, cujo comprimento e cujos azimutes nas extremidades se obtêm pelo problema geodésico inverso. \textcite{vincenty1975} resolve esse problema por iteração, com exatidão da ordem de 0,5~mm. \textcite{karney2013} apresenta um algoritmo com exatidão próxima à da aritmética de ponto flutuante e convergência garantida em todos os casos.
+\subsection{R6: estrutura comum e conteúdo flexível}\label{sec:req-forma}
 
-A altitude também depende de uma referência. A altitude elipsoidal $h$, obtida por posicionamento por satélite, relaciona-se com a altitude ortométrica $H$, referida ao geoide, pela ondulação geoidal $N$:
-\begin{equation}
-    h = H + N
-    \label{eq:ondulacao}
-\end{equation}
-As cartas de aeródromo publicam a elevação das cabeceiras e a ondulação geoidal, o que permite passar de uma referência à outra.
+Todos os elementos devem compartilhar uma forma mínima, e o restante do conteúdo deve ser livre. A forma mínima é o que permite tratar qualquer elemento da mesma maneira, isto é, a sua identidade, o seu tipo, a sua posição ou relação com outros elementos e as premissas de que dependem os valores derivados. O conteúdo livre acomoda a diversidade entre aeródromos, que nenhum esquema fixo antecipa. Uma informação ausente deve, além disso, distinguir-se de uma informação nula.
 
-Projeções cartográficas, como a Universal Transversa de Mercator (UTM), representam o elipsoide em um plano à custa de deformações. Na UTM, o fator de escala vale 0,9996 no meridiano central de cada fuso e varia com o afastamento a ele. O norte da quadrícula, além disso, não coincide com o norte verdadeiro, e a diferença entre eles é a convergência meridiana. Distâncias e azimutes medidos sobre a projeção diferem, portanto, dos medidos sobre o elipsoide, e a diferença varia com a posição.
+\subsection{R7: verificação por terceiro}\label{sec:req-verificacao}
 
-Um comprimento calculado sobre o elipsoide tampouco coincide com o comprimento medido sobre o terreno, e duas reduções os relacionam. A primeira é a de altitude. Uma distância horizontal $D_h$, medida à altitude $h$, corresponde no elipsoide a
-\begin{equation}
-    D_0 = D_h \frac{R}{R + h} \approx D_h \left(1 - \frac{h}{R}\right)
-    \label{eq:reducao-altitude}
-\end{equation}
-em que $R$ é o raio de curvatura da Terra no local. A segunda é a de inclinação. Entre dois pontos com desnível $\Delta z$ e distância horizontal $L$, a distância inclinada excede a horizontal em aproximadamente
-\begin{equation}
-    \Delta L \approx \frac{\Delta z^2}{2L}
-    \label{eq:reducao-inclinacao}
-\end{equation}
-Um produto que publique comprimentos precisa, portanto, declarar a convenção adotada. Sem essa declaração, dois valores corretos para a mesma pista podem diferir apenas por convenção.
+Quem recebe os dados deve poder conferir a sua integridade sem confiar em quem os publica, nem no código de quem os publica. Para isso, a forma de verificação precisa ser pública e simples o bastante para ser reimplementada de forma independente.
 
-\section{Dados temporais}\label{sec:temporal}
+\section{Estudo de caso e dados}\label{sec:caso}
 
-\subsection{Tempo de validade e tempo de transação}\label{sec:bitemporal}
+O estudo de caso é a pista 16/34 do Aeroporto de São José dos Campos (SBSJ). A escolha se deve a dois fatores. O primeiro é a existência de duas cartas oficiais, de 2022 e de 2026, com valores diferentes para a mesma pista (Figura~\ref{fig:adc-aoc}), o que permite caracterizar a lacuna com dados reais. O segundo é a configuração simples, com uma única pista, que isola as propriedades avaliadas de questões de composição entre vários elementos.
 
-A retenção do histórico de um banco de dados, e não apenas do seu estado corrente, é estudada há décadas na área de bancos de dados temporais. \textcite{snodgrass2000} distingue dois eixos de tempo. O tempo de validade corresponde ao período em que um fato é verdadeiro no mundo, e o tempo de transação, ao instante em que o fato foi registrado no banco. Um banco que mantém os dois eixos é chamado bitemporal.
+Os dados vêm de três publicações do DECEA:
+\begin{itemize}
+    \item a AIP, seções AD~2.12 e AD~2.13, com as coordenadas, as elevações e a ondulação geoidal das cabeceiras, a largura da pista, as dimensões da zona de parada e as distâncias declaradas \cite{decea2026aip};
+    \item a Carta de Obstáculos de Aeródromo, emenda AIRAC~2213 \cite{decea2022aoc};
+    \item a Carta de Aeródromo, emenda AIRAC~2604 \cite{decea2026adc}.
+\end{itemize}
 
-A distinção tem consequências diferentes conforme o domínio. Em uma transação financeira, o lançamento registrado constitui o próprio fato para fins contábeis, e o saldo de uma conta não descreve nenhum objeto independente do sistema. Os dados aeronáuticos, ao contrário, descrevem objetos físicos que existem independentemente da sua representação. Uma pista existe antes de ser medida ou publicada, e a sua medição pode ser registrada dias ou meses depois de realizada, além de poder estar incorreta.
+Apenas as premissas entram no registro. Os valores que a AIP publica e que podem ser calculados, como o comprimento, os azimutes e as distâncias declaradas, ficam de fora e servem de gabarito. As duas cartas servem apenas ao contraste do E1. A remedição da cabeceira~34 e as restrições temporárias são simuladas, pois não ocorreram no período estudado, e servem para exercitar o ciclo de vida dos elementos.
 
-Considere uma pista cujo comprimento sempre foi de 2500~m, mas que foi publicada durante anos com o valor de 2600~m. Quando o erro é identificado, registra-se uma correção, e o histórico admite duas leituras. Com apenas o tempo de transação, o sistema informa que o valor publicado era de 2600~m até a data da correção, o que permite reconstruir o que foi oficialmente informado em cada instante. Com os dois eixos, o sistema representa, ao mesmo tempo, que a pista sempre teve 2500~m e que o registro informava 2600~m até determinada data. A primeira leitura atende à auditoria documental. A segunda permite também relacionar ocorrências passadas a uma condição que só foi reconhecida depois.
+\section{Experimentos}\label{sec:experimentos}
 
-\subsection{Event sourcing e CQRS}\label{sec:event-sourcing}
+São seis experimentos, cada um dedicado a uma propriedade da hipótese. O E1 é um contraste. Ele registra os dados na forma em que as publicações chegam ao usuário e verifica o que esse registro permite responder. Os demais usam a arquitetura proposta. A Tabela~\ref{tab:experimentos} apresenta as perguntas e os critérios de aprovação, e a Seção~\ref{sec:procedimentos} descreve como cada experimento é executado.
 
-\textcite{fowler2005} descreve o padrão \textit{event sourcing}, que leva a retenção do histórico ao seu limite. Nele, o estado não é gravado, mas derivado da sequência de eventos que o produziu. Cada alteração é um evento acrescentado a um registro em que só se escreve, e o estado em qualquer instante é obtido reprocessando os eventos até ele.
+\begin{table}[htbp]
+    \centering
+    \caption{Perguntas e critérios de aprovação dos experimentos.}
+    \label{tab:experimentos}
+    \small
+    \begin{tabularx}{\linewidth}{l X X}
+        \toprule
+        & Pergunta & Critério de aprovação \\
+        \midrule
+        E1 & O modelo que guarda o valor publicado registra a causa das mudanças entre edições? & contraste: nenhum campo alterado traz causa \\
+        E2 & Os valores derivados reproduzem os publicados? A remedição de uma cabeceira obriga a reescrever outro dado? & diferença dentro da margem de cada grandeza; a remedição grava apenas o levantamento e a troca de referencial; diferença ao gabarito geodésico abaixo de 0,5~mm \\
+        E3 & O estado em qualquer instante é reconstruído, com autor, motivo e causa de cada mudança? & estados esperados em todos os instantes consultados; derivados de um instante passado idênticos antes e depois da remedição \\
+        E4 & Quais alterações feitas diretamente no banco são detectadas, e por qual mecanismo? & alterar, apagar e inserir eventos detectados pela cadeia; reescrita completa detectada pela âncora \\
+        E5 & Produtos gerados do mesmo registro divergem? Um terceiro verifica o registro sem a biblioteca? & mesmos valores nos dois produtos; o verificador independente chega à mesma cabeça e aponta o evento alterado \\
+        E6 & A leitura pelo tópico equivale à do banco, sem estados intermediários e com o canal adulterado percebido? & mesmas respostas em todos os cortes; nenhum corte dentro de um grupo; recorte com os mesmos derivados; recusa da leitura além do recebido; mesmo \textit{hash} nos seis consumidores; adulteração no meio do tópico interrompe o consumo \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
+% CONFERIR: citar os commits em que as verificações foram registradas antes da execução.
 
-O padrão costuma vir acompanhado da segregação entre comandos e consultas (CQRS, \textit{Command Query Responsibility Segregation}), descrita por \textcite{young2010}. O lado da escrita valida os comandos e registra os eventos. O lado da leitura monta, a partir deles, tantos modelos de consulta quantos forem necessários, todos descartáveis e reconstruíveis. \textcite{kleppmann2017} mostra como esse modelo, em que um registro ordenado é a fonte da verdade e os demais dados são derivados dele, sustenta sistemas de dados de grande porte.
+Nenhuma margem foi escolhida livremente. As margens das grandezas publicadas decorrem da precisão com que a AIP publica cada valor e as coordenadas de que ele depende, definida no PANS-AIM \cite{icao2018pansaim}. O comprimento, por exemplo, é publicado ao metro, e as coordenadas das cabeceiras, a 0,01\textquotedbl. O valor calculado pode, então, diferir do publicado em até 0,919~m, sendo 0,5~m do arredondamento ao metro e 0,419~m do efeito do arredondamento das coordenadas. Pelo mesmo raciocínio, resultam $\pm$1,419~m para a ASDA~16, que soma o arredondamento da zona de parada, $\pm$0,014$^\circ$ para os azimutes e $\pm$1,009$^\circ$ para os rumos magnéticos, publicados em graus inteiros, assim como a variação magnética. O Apêndice~\ref{ape:testes} lista as verificações de cada experimento. A comparação com o gabarito geodésico usa a exatidão de 0,5~mm das fórmulas de Vincenty (Seção~\ref{sec:geodesia}). As verificações foram registradas no histórico do repositório de experimentos antes da sua execução \cite{aeroledger_experimentos}.
 
-\section{Registros imutáveis em sistemas financeiros}\label{sec:financeiro}
+\section{Verificação interna e comparação externa}\label{sec:validacao}
 
-O registro de eventos imutáveis é a base de sistemas financeiros em produção, nos quais a exigência de auditoria é antiga e o volume de operações é muito maior que o da informação aeronáutica. A origem desse modelo é a contabilidade. Em um livro-razão, nenhum lançamento é apagado, um erro é corrigido por um lançamento de estorno e o saldo é derivado dos lançamentos \cite{helland2016}. Empresas de pagamento aplicam esse princípio diretamente, como mostram os registros de movimentação de dinheiro da Stripe \cite{ganelin2024} e da Square \cite{strzalkowski2019}. Dois outros casos ilustram aspectos complementares do modelo.
+Uma biblioteca que confere o que ela própria gravou mostra consistência por construção, e não correção. Por isso, a avaliação distingue dois tipos de verificação. A verificação interna confere que a biblioteca devolve o que gravou e que as suas regras são cumpridas. A comparação externa confronta os resultados com referências que não dependem da biblioteca.
 
-\textcite{fowler2011} descreve o núcleo da LMAX, uma bolsa de negociação de varejo. Toda a lógica de negócio é executada em memória, em uma única \textit{thread}, e processa cerca de seis milhões de pedidos por segundo. O estado não é persistido diretamente. Cada evento de entrada é gravado em um diário (\textit{journal}) antes de ser processado, e, em caso de falha, o estado é reconstruído reprocessando esses eventos a partir do último \textit{snapshot}. O caso mostra que a reconstrução do estado a partir de eventos é um mecanismo de operação, e não apenas de laboratório, e que o seu custo de escrita não é impeditivo.
+Três referências externas são usadas. A primeira são os valores da AIP que não entram no modelo, como o comprimento, os azimutes e as distâncias declaradas, que a arquitetura precisa recalcular. A segunda é um gabarito geodésico, uma implementação das fórmulas de Vincenty escrita separadamente e validada em um caso publicado. A terceira é um verificador independente, escrito apenas a partir da especificação pública da cadeia, sem o código da biblioteca.
 
-O segundo caso é o do Nubank, banco digital brasileiro que opera sobre o Datomic, um banco de dados de fatos imutáveis \cite{cognitect2026}. No Datomic, um fato nunca é sobrescrito. Uma alteração acrescenta um novo fato e retrai o anterior, que permanece no histórico, o que permite consultar o banco como ele era em qualquer instante passado. Trata-se de um uso estrutural, e não periférico. Em 2020, o Nubank adquiriu a Cognitect, criadora do Datomic e da linguagem Clojure, sobre os quais funciona a maior parte dos seus sistemas \cite{fintechfutures2020}. O caso reúne, em um banco regulado e em escala, a retração no lugar da exclusão e a consulta do estado em um instante arbitrário.
+\section{Reprodutibilidade}\label{sec:reprodutibilidade}
 
-Nenhum dos dois casos trata, porém, da evidência de adulteração. O diário da LMAX e o histórico do Datomic retêm os eventos, mas não permitem que um terceiro verifique que eles não foram alterados. Essa garantia vem de outra linha de trabalho, tratada a seguir.
-
-\section{Evidência de adulteração}\label{sec:adulteracao}
-
-\textcite{haber1991} propõem encadear registros por funções de \textit{hash}. Cada registro inclui o \textit{hash} do anterior, de modo que alterar qualquer um deles invalida todos os elos seguintes. A mesma ideia sustenta os bancos de dados de \textit{ledger}, que guardam o histórico de forma verificável. \textcite{antonopoulos2021} descrevem o SQL Ledger, do Azure SQL Database, que mantém as tabelas comuns do banco, mas encadeia criptograficamente cada transação. O sistema também publica resumos (\textit{digests}) que permitem verificar, posteriormente, que nada foi alterado. O Amazon QLDB seguiu a mesma linha como serviço gerenciado, até ser encerrado em 2025 \cite{aws2025qldb}.
-
-A principal alternativa à cadeia linear é a árvore proposta por \textcite{merkle1988}. Nela, os registros ocupam as folhas, cada nó interno guarda o \textit{hash} dos seus filhos, e o \textit{hash} da raiz resume todo o conjunto. A árvore oferece duas provas curtas, de tamanho logarítmico no número de registros. A prova de inclusão mostra que um registro pertence ao conjunto sem revelar os demais, e a prova de consistência mostra que uma versão do registro é continuação de outra anterior. Os registros públicos de certificados digitais (\textit{Certificate Transparency}) usam essa estrutura para que qualquer parte possa auditar a emissão de certificados \cite{rfc6962}. Em uma cadeia linear, as duas verificações também são possíveis, mas exigem percorrer o registro inteiro.
-
-Esses mecanismos têm um limite comum. Uma cadeia de \textit{hash} detecta alterações pontuais, mas não a reescrita completa do registro por quem o controla, que produz uma nova sequência internamente coerente. Essa reescrita só é detectada se um resumo anterior do registro, como a sua cabeça ou a raiz da árvore, tiver sido guardado fora do sistema, na forma de uma âncora externa. É por essa razão que o SQL Ledger publica os seus resumos em armazenamento externo e imutável.
-
-\section{Consistência e disponibilidade em sistemas distribuídos}\label{sec:distribuidos}
-
-Quando os dados são replicados para vários leitores, surge um compromisso conhecido. \textcite{brewer2000} formula o teorema CAP, que \textcite{gilbert2002} demonstram formalmente. Segundo o teorema, um sistema distribuído, diante de uma partição da rede, precisa escolher entre consistência e disponibilidade. Ou responde sempre, ainda que com dados possivelmente desatualizados, ou responde sempre de forma consistente, ainda que às vezes deixe de responder.
-
-\textcite{kleppmann2017} mostra que esse compromisso pode ser resolvido de forma diferente em cada parte de um sistema construído sobre um registro ordenado. A escrita pode ser centralizada em um único ponto, que impõe a ordem total dos eventos, enquanto a leitura é distribuída entre consumidores que mantêm as suas próprias cópias derivadas. A transferência dos eventos do banco para os consumidores é feita por captura de mudanças (\textit{change data capture}, CDC), seja pela leitura do registro do banco, seja por uma tabela de saída (\textit{outbox}) gravada na mesma transação. Cada consumidor guarda apenas a sua posição de leitura. Como o registro só cresce, um consumidor atrasado conhece um prefixo do registro, e nunca uma versão divergente dele.
-
-\section{Síntese}\label{sec:sintese-fund}
-
-Os fundamentos apresentados delimitam o espaço em que este trabalho se situa. A informação aeronáutica já dispõe de requisitos de integridade e rastreabilidade e de um modelo de intercâmbio com noção de tempo, mas nenhum dos dois assegura que o histórico, as premissas e a causa de cada alteração cheguem ao usuário junto com os dados. As distâncias declaradas, por sua vez, decorrem de regras do Anexo~14 aplicadas a posições e dimensões, o que as torna candidatas naturais a valores calculados, e não armazenados. O referenciamento linear da ISO~19148 e a geodésia sobre o elipsoide oferecem os meios para registrar posições por dependência e para calcular comprimentos sob uma convenção explícita.
-
-Dos modelos que retêm histórico, este trabalho adota o \textit{event sourcing} e a separação entre escrita e leitura, com o tempo de transação como única linha do tempo e a bitemporalidade como extensão possível. Dos sistemas financeiros, adota o princípio do livro-razão, em que nada se apaga e toda correção é um novo registro. Da linha de evidência de adulteração, adota o encadeamento por \textit{hash}, com a cadeia linear preferida à árvore de Merkle pelo pequeno volume do domínio, e reconhece o limite que só uma âncora externa supera. A discussão sobre sistemas distribuídos, por fim, fundamenta a escolha de privilegiar a consistência na escrita e a disponibilidade na leitura. O Capítulo~\ref{chap:metodologia} transforma esses fundamentos em requisitos e no método de avaliação.
+Os experimentos usam a biblioteca \texttt{aeroledger}, versão 0.6.0 (\textit{commit} \texttt{e93b718}) \cite{aeroledger}, e são executados por um \textit{notebook} mantido em repositório separado \cite{aeroledger_experimentos}. A separação garante que a biblioteca avaliada não contenha código escrito para o experimento. O banco extraído do SBSJ, gerado a partir do mesmo cenário, está publicado como conjunto de dados aberto \cite{aeroledger_dataset} e permite repetir parte da avaliação sem a biblioteca (Seção~\ref{sec:res-banco}).

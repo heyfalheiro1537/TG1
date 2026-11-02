@@ -8,7 +8,7 @@ A arquitetura parte de uma ideia central. O dado primário não é o estado do a
 
 A essa ideia soma-se a separação entre escrita e leitura (CQRS). Do lado da escrita, um único ponto de entrada valida e grava os eventos, e o que ele grava é a única fonte de verdade. Do lado da leitura, cada produto é um modelo de leitura montado a partir dos mesmos eventos. São exemplos o estado de um elemento, o conteúdo de uma carta e a tabela de distâncias declaradas. Os modelos de leitura podem ser vários, podem mudar e podem ser apagados e reconstruídos, pois não guardam nada que não esteja nos eventos.
 
-A arquitetura tem quatro peças, apresentadas na Tabela~\ref{tab:pecas}, e cada requisito do Capítulo~\ref{chap:metodologia} é atendido por um mecanismo dessas peças, como resume a Tabela~\ref{tab:requisitos-mecanismos}.
+A arquitetura tem quatro peças, apresentadas na Tabela~\ref{tab:pecas}, e cada requisito da Seção~\ref{sec:requisitos} é atendido por um mecanismo dessas peças, como resume a Tabela~\ref{tab:requisitos-mecanismos}.
 
 \begin{table}[htbp]
     \centering
@@ -40,7 +40,7 @@ A arquitetura tem quatro peças, apresentadas na Tabela~\ref{tab:pecas}, e cada 
         R3 Consistência entre produtos & produtos como modelos de leitura da mesma fonte, com limite explícito e regra identificada & \ref{sec:leitura}, \ref{sec:distribuicao} \\
         R4 Mínimo de informação & derivados calculados na leitura, nunca gravados & \ref{sec:leitura} \\
         R5 Posição relativa & referencial com referentes e posições $(e, r, s, o, v)$ & \ref{sec:referencial} \\
-        R6 Forma comum, conteúdo livre & envelope fixo e corpo sem esquema, achatado em linhas & \ref{sec:registro} \\
+        R6 Estrutura comum e conteúdo flexível & envelope fixo e corpo sem esquema, achatado em linhas & \ref{sec:registro} \\
         R7 Verificação por terceiros & cadeia de \textit{hash} sobre forma canônica pública, conferida na leitura e no arquivo & \ref{sec:escrita}, \ref{sec:verificacao} \\
         \bottomrule
     \end{tabularx}
@@ -48,6 +48,33 @@ A arquitetura tem quatro peças, apresentadas na Tabela~\ref{tab:pecas}, e cada 
 \end{table}
 
 A arquitetura não depende de um banco de eventos ou de grafos dedicado. Um banco relacional comum é suficiente, e uma extensão espacial é opcional. A escolha é deliberada, pois as propriedades decorrem da forma como os dados são escritos e lidos, e não de uma tecnologia específica. O banco extraído (Seção~\ref{sec:banco-extraido}) é a demonstração mais direta disso, já que as mesmas propriedades valem em um arquivo, sem servidor.
+
+A arquitetura combina mecanismos já conhecidos, e a contribuição está na sua composição e nas adaptações que o domínio exige (Seção~\ref{sec:disc-contribuicao}). A Tabela~\ref{tab:origem} separa o que é adotado da literatura, o que é adaptado e o que é proposto neste trabalho.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Origem dos elementos da arquitetura.}
+    \label{tab:origem}
+    \small
+    \begin{tabularx}{\linewidth}{X X X}
+        \toprule
+        Elemento & Base & Situação neste trabalho \\
+        \midrule
+        Registro em que só se acrescenta; estado derivado dos eventos & \textit{event sourcing} \cite{fowler2005,kleppmann2017} & adotado \\
+        Separação entre escrita e leitura & CQRS \cite{young2010} & adotado \\
+        Correção por novo lançamento & livro-razão \cite{helland2016} & adotado \\
+        Encadeamento por \textit{hash} sobre forma canônica & \citeonline{haber1991}; RFC~8785 & adotado \\
+        Ciclo de vida \texttt{BASELINE}, \texttt{DELTA} e \texttt{VOID} & \textit{TimeSlices} do AIXM & adaptado: o temporário é o ciclo de vida de uma \textit{feature} própria \\
+        Posições por referente & ISO~19148 & adaptado: duas pontas medidas; azimute e declividade nunca registrados \\
+        Grupos atômicos & partidas dobradas & adaptado: sem lei de conservação, a atomicidade é imposta na escrita \\
+        Consumidores sobre canal não confiável & registro ordenado e CDC \cite{kleppmann2017} & adaptado: conferência da cadeia, limite explícito e fecho de dependência \\
+        Referencial endereçado pelo conteúdo e trocado por evento & -- & proposto \\
+        Distâncias declaradas derivadas na leitura, com regra identificada & regras do Anexo~14 & proposto \\
+        Banco extraído como extrato verificável & -- & proposto \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
 
 \section{O registro}\label{sec:registro}
 
@@ -68,7 +95,7 @@ O envelope identifica o evento e indica a sua origem. Ele tem a mesma forma para
 
 A causa só pode apontar para um evento já existente no mesmo registro e anterior ao que a declara. Por isso, as causas formam um grafo acíclico, e toda cadeia de causas termina em um evento sem causa anterior. Esse evento é uma observação, como o levantamento de uma cabeceira, ou uma decisão, como a publicação inicial de uma pista. O tipo e o dono de uma \textit{feature} também não mudam ao longo da sua vida, de modo que uma pista não se converte em pista de táxi. Uma reclassificação desse tipo é registrada como o encerramento de uma \textit{feature} seguido da criação de outra.
 
-O corpo contém o que se afirma sobre a \textit{feature}. Ele não tem esquema fixo e consiste em um documento JSON organizado em camadas, como a camada física, com a qualidade do pavimento, e a camada de geometria, com as posições. Na gravação, o corpo é achatado em linhas, uma por campo. Cada linha é identificada pelo caminho do campo, de forma análoga ao acesso às propriedades de um objeto (por exemplo, \texttt{geometria.primitivos.pista.largura}), e registra a operação, de definição ou de remoção, e o novo valor. Esse achatamento atende ao requisito de forma comum com conteúdo livre (Seção~\ref{sec:req-forma}), e dele decorrem três propriedades:
+O corpo contém o que se afirma sobre a \textit{feature}. Ele não tem esquema fixo e consiste em um documento JSON organizado em camadas, como a camada física, com a qualidade do pavimento, e a camada de geometria, com as posições. Na gravação, o corpo é achatado em linhas, uma por campo. Cada linha é identificada pelo caminho do campo, de forma análoga ao acesso às propriedades de um objeto (por exemplo, \texttt{geometria.primitivos.pista.largura}), e registra a operação, de definição ou de remoção, e o novo valor. Esse achatamento atende ao requisito de estrutura comum e conteúdo flexível (Seção~\ref{sec:req-forma}), e dele decorrem três propriedades:
 \begin{itemize}
     \item a leitura pode restringir-se a uma camada, pois um índice por caminho permite ler apenas a geometria de uma pista, sem abrir o restante do corpo;
     \item um campo ausente distingue-se de um campo nulo, já que o primeiro não foi informado e o segundo foi informado como vazio;
@@ -103,8 +130,6 @@ Algumas mudanças exigem mais de um evento. A carga de uma edição do AIP, por 
 Cada evento do grupo leva no envelope o \texttt{grupo\_id}, que é o identificador do primeiro evento, e o \texttt{grupo\_n}, que é o número de eventos do grupo. O primeiro campo registra quais eventos formam uma mesma mudança, o que o instante comum, por si só, não garante. O segundo permite a quem lê saber se já recebeu o grupo inteiro. Uma leitura cujo limite caia dentro de um grupo recua até antes dele, de modo que nenhum corte mostra uma mudança pela metade (Seção~\ref{sec:distribuicao}).
 
 O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, no qual as partidas de uma transferência entram juntas e o livro nunca mostra o débito sem o crédito. Há, contudo, uma diferença. Na contabilidade, as partidas de um lançamento somam zero, e uma transferência incompleta se denuncia sozinha. Aqui não há lei de conservação, e uma pista sem zona de parada é um estado plausível. A atomicidade, por isso, não pode depender de uma conferência posterior.
-
-Os dois campos poderiam ser substituídos por um único \textit{bit} no próprio identificador, ao fim da sequência, que marcaria os eventos que ainda não fecham o grupo. O envelope ficaria mais simples, ao custo de reduzir à metade o número de eventos por milissegundo, que é também o tamanho máximo de um grupo.
 
 \section{Tempo}\label{sec:tempo}
 
@@ -190,7 +215,8 @@ A escrita tem apenas duas operações, a gravação de um evento e a gravação 
     \item \texttt{DELTA} ou \texttt{VOID} sem \texttt{BASELINE} vigente;
     \item \texttt{BASELINE} sobre \textit{feature} viva;
     \item envelope alterado;
-    \item \texttt{VOID} sem motivo e autor vazio;
+    \item \texttt{VOID} sem motivo;
+    \item autor vazio;
     \item caminho malformado, remoção de campo ausente e campo que seja ao mesmo tempo valor e prefixo de outro;
     \item causa que aponte para evento inexistente;
     \item posição que aponte para referente inexistente;
@@ -251,8 +277,8 @@ Se todo produto for lido diretamente do banco, o banco passa a ser um ponto úni
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\linewidth]{Figures/distribuicao.pdf}
-    \caption{Distribuição da leitura. O registro é publicado em ordem em um tópico geral, e cada consumidor monta a sua projeção. Tudo à direita do registro é derivado e pode ser reconstruído a partir dele.}
+    \includegraphics[width=\linewidth]{Figures/fig_arquitetura_pubsub.pdf}
+    \caption{Distribuição da leitura. O registro é publicado em ordem em um tópico geral, e cada consumidor monta a sua projeção. Tudo à direita do registro é derivado e pode ser reconstruído a partir dele. A fila de escrita e a réplica síncrona, à esquerda, são extensões propostas (Seção~\ref{sec:extensoes}).}
     \label{fig:distribuicao}
     \par\smallskip{\small Fonte: o autor.}
 \end{figure}
@@ -269,7 +295,7 @@ Há um único tópico, com todos os eventos, e todo consumidor o lê. Essa escol
     \item não há nada a rotear, e o encerramento de uma \textit{feature} é apenas mais um evento no tópico, como no registro.
 \end{itemize}
 
-Um tópico por \textit{feature}, em que cada consumidor assinaria apenas o que lhe interessa, foi considerado e descartado. Essa alternativa exigiria um componente para decidir onde publicar cada evento, cujo erro seria silencioso, além de uma posição de leitura por tópico e da remontagem de mudanças distribuídas. Esses tópicos continuam possíveis como otimização derivada do tópico geral.
+Um tópico por \textit{feature} foi descartado, porque exigiria um roteador cujo erro seria silencioso, mas continua possível como otimização derivada do tópico geral (Seção~\ref{sec:extensoes}).
 
 \subsection{O canal não é confiável}
 
@@ -289,7 +315,7 @@ Os consumidores são preguiçosos (\textit{lazy}) por definição. Não recebem 
     \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
-Três regras preservam os requisitos do Capítulo~\ref{chap:metodologia} nesse cenário. A primeira é a do grupo inteiro. Os eventos de um grupo só são aplicados juntos, e, se o lote lido termina no meio de um grupo, o consumidor continua lendo até fechá-lo. Se o restante ainda não chegou, a posição não se move. Um corte de leitura nunca cai dentro de um grupo, e nenhuma leitura mostra uma carga pela metade.
+Três regras preservam os requisitos da Seção~\ref{sec:requisitos} nesse cenário. A primeira é a do grupo inteiro. Os eventos de um grupo só são aplicados juntos, e, se o lote lido termina no meio de um grupo, o consumidor continua lendo até fechá-lo. Se o restante ainda não chegou, a posição não se move. Um corte de leitura nunca cai dentro de um grupo, e nenhuma leitura mostra uma carga pela metade.
 
 A segunda regra é a do limite explícito. Toda leitura declara até onde vai, como \texttt{event\_id} ou como instante, e não existe leitura ``do mais recente''. Se o limite ultrapassa o que o consumidor já recebeu, ele recusa a leitura em vez de responder com um estado desatualizado.
 
@@ -342,7 +368,7 @@ O esquema espelha o do registro, com o envelope em colunas e o corpo em JSONB, o
     \item \texttt{exportacao}, com a procedência do arquivo e o aviso de que parte do cenário é simulada;
     \item \texttt{run}, com as cadeias contidas no arquivo;
     \item \texttt{referencial}, com o corpo de cada referencial, endereçado pelo conteúdo;
-    \item \texttt{evento}, com o envelope em colunas e o corpo como a lista de linhas $\{\mathrm{caminho},\, \mathrm{operação},\, \mathrm{valor}\}$ ordenada pelo caminho, exatamente a que entra no \textit{hash}.
+    \item \texttt{evento}, com o envelope em colunas e o corpo como a lista de linhas, cada uma com caminho, operação e valor, ordenada pelo caminho, exatamente a que entra no \textit{hash}.
 \end{itemize}
 
 Gatilhos impedem a atualização e a exclusão de eventos, exigem o encadeamento e conferem a forma das linhas do corpo. Visões de leitura, que nada guardam, completam o arquivo. A visão \texttt{evento\_legivel} apresenta o instante extraído do próprio identificador, e a visão \texttt{campo}, o corpo achatado, com uma linha por campo. A visão \texttt{cabeca} mostra o último evento de cada cadeia, para comparação com a âncora, e a visão \texttt{estado\_atual}, as \textit{features} vivas e os seus campos. O arquivo traz ainda consultas de exemplo comentadas, que mostram o estado em um corte, o que mudou entre dois cortes, a trilha de causa de um evento e o referencial vigente.
@@ -355,7 +381,7 @@ A exportação só é útil se for fiel. O arquivo precisa conter os mesmos even
 
 Com o arquivo, as leituras do registro tornam-se consultas sobre ele. É possível obter o estado em qualquer instante, a diferença entre instantes e a trilha de causa, e um terceiro pode verificá-lo com o arquivo e um programa curto. Duas coisas, porém, não estão no arquivo. A primeira são os derivados, que nunca são gravados. O comprimento resulta do referencial com qualquer implementação da geodésica, mas as distâncias declaradas dependem da regra da Equação~\ref{eq:distancias-declaradas}. A segunda são as garantias da escrita. Recusar um evento malformado e gravar um grupo inteiro são propriedades do ponto de entrada da escrita, e não de um arquivo pronto.
 
-Os gatilhos também não constituem proteção. Qualquer pessoa com o arquivo pode removê-los e editar os dados. O que o arquivo oferece é evidência de adulteração, e não impedimento. Uma alteração só é detectada recalculando os \textit{hashes}, e uma reescrita completa, apenas pela âncora. Trata-se da mesma garantia do banco original, agora nas mãos de quem recebe os dados.
+Os gatilhos, por fim, não impedem a edição do arquivo. O que ele oferece é a mesma evidência de adulteração do banco original (Seção~\ref{sec:verificacao}), agora nas mãos de quem recebe os dados.
 
 \section{Implementação}\label{sec:implementacao}
 
@@ -422,11 +448,11 @@ O referencial tem os dois referentes georreferenciados, com as coordenadas e ele
 
 As perguntas e os critérios de aprovação de cada experimento estão na Seção~\ref{sec:experimentos}. Esta seção descreve como cada um é executado sobre o cenário.
 
-\paragraph{E1: causa.} A cadeia \texttt{aixm} não emula o AIXM completo, apenas as duas edições que o usuário recebe, com cada número publicado guardado como campo e sem causa. A pista é registrada com os valores da AOC de 2022 e, em seguida, alterada com os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e verifica-se se algum deles traz causa.
+\paragraph*{E1: causa.} A cadeia \texttt{aixm} não emula o AIXM completo, apenas as duas edições que o usuário recebe, com cada número publicado guardado como campo e sem causa. A pista é registrada com os valores da AOC de 2022 e, em seguida, alterada com os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e verifica-se se algum deles traz causa.
 
-\paragraph{E2: derivação.} Entram no registro apenas as premissas, isto é, as coordenadas e elevações das cabeceiras, a largura da pista e as dimensões da zona de parada. O comprimento, os azimutes, os rumos magnéticos e as distâncias declaradas são calculados e comparados com os valores da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m. Conferem-se então os eventos escritos e os novos valores contra o gabarito de Vincenty.
+\paragraph*{E2: derivação.} Entram no registro apenas as premissas, isto é, as coordenadas e elevações das cabeceiras, a largura da pista e as dimensões da zona de parada. O comprimento, os azimutes, os rumos magnéticos e as distâncias declaradas são calculados e comparados com os valores da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m. Conferem-se então os eventos escritos e os novos valores contra o gabarito de Vincenty.
 
-\paragraph{E3: reconstrução no tempo.} Após a remedição, uma interdição de 300~m a partir da cabeceira~34 entra como restrição, com a pista como dona, e é encerrada três dias depois. O banco é então consultado como um auditor faria, em instantes anteriores, intermediários e posteriores a cada mudança. São consultados:
+\paragraph*{E3: reconstrução no tempo.} Após a remedição, uma interdição de 300~m a partir da cabeceira~34 entra como restrição, com a pista como dona, e é encerrada três dias depois. O banco é então consultado como um auditor faria, em instantes anteriores, intermediários e posteriores a cada mudança. São consultados:
 \begin{itemize}
     \item o referencial vigente e o comprimento derivado;
     \item a existência da interdição;
@@ -436,7 +462,7 @@ As perguntas e os critérios de aprovação de cada experimento estão na Seçã
 \end{itemize}
 O instante $t_a$, logo após a carga do eAIP, serve de referência ao longo deste e dos experimentos seguintes.
 
-\paragraph{E4: evidência de adulteração.} O atacante tem acesso direto ao banco. Antes dos ataques, a cabeça da cadeia é anotada fora do banco, como âncora. São executados quatro ataques:
+\paragraph*{E4: evidência de adulteração.} O atacante tem acesso direto ao banco. Antes dos ataques, a cabeça da cadeia é anotada fora do banco, como âncora. São executados quatro ataques:
 \begin{itemize}
     \item alterar o corpo de um evento sem recalcular o \textit{hash};
     \item apagar um evento;
@@ -445,9 +471,9 @@ O instante $t_a$, logo após a carga do eAIP, serve de referência ao longo dest
 \end{itemize}
 Cada ataque é executado em uma cópia do banco e conferido de duas formas, pela verificação interna da cadeia e pela comparação com a âncora.
 
-\paragraph{E5: consistência e verificação.} Dois produtos são gerados do mesmo banco, antes e depois da remedição. O primeiro é a tabela da AIP, com o comprimento e as distâncias declaradas, e o segundo, o conteúdo da carta de aeródromo. Em seguida, o registro é exportado em JSON e entregue ao verificador independente, primeiro intacto e depois com a largura da pista alterada em um metro no arquivo.
+\paragraph*{E5: consistência e verificação.} Dois produtos são gerados do mesmo banco, antes e depois da remedição. O primeiro é a tabela da AIP, com o comprimento e as distâncias declaradas, e o segundo, o conteúdo da carta de aeródromo. Em seguida, o registro é exportado em JSON e entregue ao verificador independente, primeiro intacto e depois com a largura da pista alterada em um metro no arquivo.
 
-\paragraph{E6: leitura separada.} O registro é retransmitido para o tópico, e as seis propriedades do E6 são exercitadas da seguinte forma:
+\paragraph*{E6: leitura separada.} O registro é retransmitido para o tópico, e as seis propriedades do E6 são exercitadas da seguinte forma:
 \begin{itemize}
     \item \textbf{equivalência}: um consumidor lê todo o tópico, e as suas respostas são comparadas com as do banco em cada fronteira de corte do histórico e em três instantes, a saber, logo após a carga, durante a interdição e um segundo antes do seu fim;
     \item \textbf{atomicidade}: o banco e o consumidor são consultados com um limite que cai dentro da carga do eAIP, logo após a pista e antes da zona de parada;

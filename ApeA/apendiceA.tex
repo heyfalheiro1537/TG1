@@ -1,32 +1,47 @@
+Este apêndice lista as verificações que decidem a aprovação de cada experimento. Elas estão escritas como asserções (\texttt{assert}) nas últimas células do \textit{notebook} de experimentos \cite{aeroledger_experimentos}, separadas do código que produz os resultados, e foram registradas no repositório antes da execução. Cada asserção compara um resultado com um valor esperado e, quando é o caso, com a margem definida na Seção~\ref{sec:experimentos}.
 
-
-Use an appendix to include supplementary materials that support the main content of the thesis, such as detailed calculations, additional figures, raw data, or extended explanations, ensuring the thesis remains concise and focused while providing access to relevant information for interested readers.
-
-
-\section{A First Section for the Appendix}
-\label{App:Appendix 1}
-
-The Linear Dilemma matrix $M$ and the vector of inertial torques $b$, used in the simulation, are calculated as per the formulation below:
-
-\begin{equation}
-M = \left[ \begin{array}{ccc}
-M_{11} & M_{12} & M_{13} \\
-M_{21} & M_{22} & M_{23} \\
-M_{31} & M_{32} & M_{33}
-\end{array} \right]
-\label{eq:dilemma_matrix}
-\end{equation}
-
-Equation~\ref{eq:dilemma_matrix} represents the Linear Dilemma matrix, which is essential for simulating the system dynamics.
-
-\begin{figure}[h]
-\centering
-\includegraphics[height=5cm, width=5cm]{ApeA/pragas_ciclo_cupim}
-\caption{An illustrative figure included in the appendix.}
-\label{fig:example_figure}
-\end{figure}
-
-As shown in Figure~\ref{fig:example_figure}, the simulation involves detailed graphical representations to support the findings discussed in the main thesis.
-
-
-
+\begin{longtable}{l p{0.82\linewidth}}
+    \caption{Verificações de cada experimento.}\label{tab:ape-testes}\\
+    \toprule
+    & Verificação \\
+    \midrule
+    \endfirsthead
+    \toprule
+    & Verificação \\
+    \midrule
+    \endhead
+    \bottomrule
+    \endfoot
+    E1 & Doze campos mudam entre as edições de 2022 e 2026: o comprimento da pista, o comprimento da zona de parada, o comprimento e a largura da faixa e as oito distâncias declaradas. \\
+    E1 & O evento que registra a edição de 2026 não traz causa. \\
+    \midrule
+    E2 & Cada grandeza calculada difere da publicada dentro da sua margem: 0,919~m para o comprimento e as distâncias declaradas, 1,419~m para a ASDA~16, 0,014$^\circ$ para os azimutes e 1,009$^\circ$ para os rumos magnéticos. \\
+    E2 & Nenhum valor derivado está gravado no banco. \\
+    E2 & A remedição grava exatamente dois eventos, o \texttt{BASELINE} do levantamento e o \texttt{DELTA} do aeródromo, e este altera apenas o identificador do referencial. \\
+    E2 & A troca de referencial tem o levantamento como causa. \\
+    E2 & Nenhuma \textit{feature} com posição (pista, cabeceiras e zona de parada) é reescrita. \\
+    E2 & Os vértices, o comprimento e o azimute calculados pela biblioteca coincidem com o gabarito de Vincenty a menos de 0,5~mm. \\
+    \midrule
+    E3 & Em $t_a$ vigoram o referencial e o comprimento antigos, e, depois da remedição, os novos. \\
+    E3 & A interdição existe nos três instantes dentro do seu intervalo e não existe nos três instantes fora dele. \\
+    E3 & O ciclo de vida da interdição é exatamente um \texttt{BASELINE} seguido de um \texttt{VOID}, nos instantes em que foram escritos. \\
+    E3 & O envelope da troca de referencial informa o autor, o motivo e a causa, e o levantamento que a causou tem autor. \\
+    E3 & As distâncias declaradas recalculadas para $t_a$ são idênticas às calculadas no próprio $t_a$. \\
+    \midrule
+    E4 & A alteração de um evento é apontada no próprio evento, e a exclusão e a inserção, no evento seguinte. \\
+    E4 & A reescrita da cadeia até o fim não é apontada pela verificação interna. \\
+    E4 & Os quatro ataques são detectados pela comparação com a âncora. \\
+    \midrule
+    E5 & Os dois produtos apresentam as mesmas distâncias declaradas em $t_a$ e depois da remedição, e essas distâncias mudam entre os dois instantes. \\
+    E5 & O verificador independente declara a cadeia íntegra e chega à mesma cabeça que a biblioteca. \\
+    E5 & O comprimento calculado pelo verificador difere do da biblioteca em menos de 0,5~mm. \\
+    E5 & No arquivo alterado, o verificador aponta o evento cuja largura foi modificada. \\
+    \midrule
+    E6 & Em todas as fronteiras de corte e nos três instantes testados, o consumidor apresenta os mesmos estados e as mesmas distâncias que o banco. \\
+    E6 & O banco, cortado no meio da carga, informa a ASDA~16 igual à TORA~16, e nenhum corte do consumidor cai dentro da carga. \\
+    E6 & O consumidor que assina apenas a cabeceira~16 aplica um fecho menor e chega aos mesmos estados e ao mesmo \textit{hash} dos derivados. \\
+    E6 & Antes de receber a restrição nova, o consumidor recusa a leitura; depois, responde incluindo-a, e a resposta não muda com o banco fechado. \\
+    E6 & Os seis consumidores chegam ao mesmo \textit{hash} no mesmo limite. \\
+    E6 & Os quatro ataques no meio do tópico interrompem o consumo e deixam o consumidor fiel ao banco. \\
+    E6 & O corte do fim do tópico não interrompe o consumo, e o evento falso anexado ao fim é aplicado. \\
+\end{longtable}

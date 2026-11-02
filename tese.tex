@@ -139,7 +139,8 @@
 \kwcip{Informação aeronáutica}
 \kwcip{Aeroportos}
 \kwcip{Auditabilidade}
-\kwcip{Modelagem paramétrica}
+\kwcip{Event sourcing}
+\kwcip{Referenciamento linear}
 
 % Banca examinadora -- PENDENTE
 \examiner{Prof. Dr.}{X}{}{X}
@@ -209,19 +210,24 @@
 
 % Apêndices (material do autor) -----------------------------
 \appendix
-\chapter{Testes de verificação}
+\chapter{Testes de verificação}\label{ape:testes}
 \input{ApeA/apendiceA}
 
-\chapter{Esquema do banco (DDL)}
-\input{ApeB/apendiceB}
+% Apêndice do esquema do banco extraído: descomentar quando o DDL
+% (sbsj_ledger.sql) estiver no repositório de experimentos.
+%\chapter{Esquema do banco extraído (DDL)}\label{ape:ddl}
+%\input{ApeB/apendiceB}
 
-\chapter{Reprodução do experimento}
+\chapter{Reprodução dos experimentos}\label{ape:reproducao}
 \input{ApeC/apendiceC}
 
 % Anexos (material de terceiros) ----------------------------
 \annex
-\chapter{Cartas oficiais do SBSJ}
+\chapter{Carta de Aeródromo do SBSJ}\label{anexo:adc}
 \input{AneA/anexoA}
+
+\chapter{Carta de Obstáculos de Aeródromo do SBSJ}\label{anexo:aoc}
+\input{AneB/anexoB}
 
 \iffalse
 %Glossário ------------------------------------------
