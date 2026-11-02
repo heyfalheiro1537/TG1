@@ -371,7 +371,7 @@ O esquema espelha o do registro, com o envelope em colunas e o corpo em JSONB, o
     \item \texttt{evento}, com o envelope em colunas e o corpo como a lista de linhas, cada uma com caminho, operação e valor, ordenada pelo caminho, exatamente a que entra no \textit{hash}.
 \end{itemize}
 
-Gatilhos impedem a atualização e a exclusão de eventos, exigem o encadeamento e conferem a forma das linhas do corpo. Visões de leitura, que nada guardam, completam o arquivo. A visão \texttt{evento\_legivel} apresenta o instante extraído do próprio identificador, e a visão \texttt{campo}, o corpo achatado, com uma linha por campo. A visão \texttt{cabeca} mostra o último evento de cada cadeia, para comparação com a âncora, e a visão \texttt{estado\_atual}, as \textit{features} vivas e os seus campos. O arquivo traz ainda consultas de exemplo comentadas, que mostram o estado em um corte, o que mudou entre dois cortes, a trilha de causa de um evento e o referencial vigente.
+Gatilhos impedem a atualização e a exclusão de eventos, exigem o encadeamento e conferem a forma das linhas do corpo. Visões de leitura, que nada guardam, completam o arquivo. A visão \texttt{evento\_legivel} apresenta o instante extraído do próprio identificador, e a visão \texttt{campo}, o corpo achatado, com uma linha por campo. A visão \texttt{cabeca} mostra o último evento de cada cadeia, para comparação com a âncora, e a visão \texttt{estado\_atual}, as \textit{features} vivas e os seus campos. O arquivo traz ainda consultas de exemplo comentadas, que mostram o estado em um corte, o que mudou entre dois cortes, a trilha de causa de um evento e o referencial vigente. O esquema completo está no Apêndice~\ref{ape:ddl}.
 
 \subsection{Exportação fiel}
 

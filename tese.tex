@@ -60,6 +60,8 @@
 \usepackage{amsthm}
 \usepackage{cancel}      % termos cancelados em equações
 
+\usepackage{fancyvrb}    % código-fonte nos apêndices
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
 \usepackage{longtable}   % tabelas multi-página
 \usepackage{array}       % novos tipos de coluna
 \usepackage{booktabs}
@@ -213,10 +215,8 @@
 \chapter{Testes de verificação}\label{ape:testes}
 \input{ApeA/apendiceA}
 
-% Apêndice do esquema do banco extraído: descomentar quando o DDL
-% (sbsj_ledger.sql) estiver no repositório de experimentos.
-%\chapter{Esquema do banco extraído (DDL)}\label{ape:ddl}
-%\input{ApeB/apendiceB}
+\chapter{Esquema do banco extraído (DDL)}\label{ape:ddl}
+\input{ApeB/apendiceB}
 
 \chapter{Reprodução dos experimentos}\label{ape:reproducao}
 \input{ApeC/apendiceC}
