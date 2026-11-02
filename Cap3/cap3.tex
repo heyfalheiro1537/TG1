@@ -23,7 +23,7 @@ O trabalho segue a pesquisa em ciência do design (\textit{design science resear
     \par\smallskip{\small Fonte: o autor, a partir de \citeonline{peffers2007}.}
 \end{table}
 
-A avaliação é feita por falseamento. Cada propriedade da hipótese é traduzida em uma pergunta de resposta sim ou não, com um critério de aprovação fixado antes da execução. Um experimento reprovado refutaria a propriedade correspondente no caso estudado. Um experimento aprovado não a prova em geral, mas mostra que a arquitetura a sustenta nas condições declaradas.
+A avaliação é feita por falseamento. Cada propriedade da hipótese é traduzida em uma pergunta de resposta sim ou não, com um critério de aprovação derivado de referências externas e registrado antes da execução que produziu os resultados. Um experimento reprovado refutaria a propriedade correspondente no caso estudado. Um experimento aprovado não a prova em geral, mas mostra que a arquitetura a sustenta nas condições declaradas.
 
 \section{Requisitos do artefato}\label{sec:requisitos}
 
@@ -125,9 +125,10 @@ São seis experimentos, cada um dedicado a uma propriedade da hipótese. O E1 é
     \end{tabularx}
     \par\smallskip{\small Fonte: o autor.}
 \end{table}
-% CONFERIR: citar os commits em que as verificações foram registradas antes da execução.
 
-Nenhuma margem foi escolhida livremente. As margens das grandezas publicadas decorrem da precisão com que a AIP publica cada valor e as coordenadas de que ele depende, definida no PANS-AIM \cite{icao2018pansaim}. O comprimento, por exemplo, é publicado ao metro, e as coordenadas das cabeceiras, a 0,01\textquotedbl. O valor calculado pode, então, diferir do publicado em até 0,919~m, sendo 0,5~m do arredondamento ao metro e 0,419~m do efeito do arredondamento das coordenadas. Pelo mesmo raciocínio, resultam $\pm$1,419~m para a ASDA~16, que soma o arredondamento da zona de parada, $\pm$0,014$^\circ$ para os azimutes e $\pm$1,009$^\circ$ para os rumos magnéticos, publicados em graus inteiros, assim como a variação magnética. O Apêndice~\ref{ape:testes} lista as verificações de cada experimento. A comparação com o gabarito geodésico usa a exatidão de 0,5~mm das fórmulas de Vincenty (Seção~\ref{sec:geodesia}). As verificações foram registradas no histórico do repositório de experimentos antes da sua execução \cite{aeroledger_experimentos}.
+Nenhuma margem foi escolhida livremente. As margens das grandezas publicadas decorrem da precisão com que a AIP publica cada valor e as coordenadas de que ele depende, definida no PANS-AIM \cite{icao2018pansaim}. O comprimento, por exemplo, é publicado ao metro, e as coordenadas das cabeceiras, a 0,01\textquotedbl. O valor calculado pode, então, diferir do publicado em até 0,919~m, sendo 0,5~m do arredondamento ao metro e 0,419~m do efeito do arredondamento das coordenadas. Pelo mesmo raciocínio, resultam $\pm$1,419~m para a ASDA~16, que soma o arredondamento da zona de parada, $\pm$0,014$^\circ$ para os azimutes e $\pm$1,009$^\circ$ para os rumos magnéticos, publicados em graus inteiros, assim como a variação magnética. O Apêndice~\ref{ape:testes} lista as verificações de cada experimento. A comparação com o gabarito geodésico usa a exatidão de 0,5~mm das fórmulas de Vincenty (Seção~\ref{sec:geodesia}). 
+
+As verificações foram registradas no histórico do repositório de experimentos antes da execução que produziu os resultados \cite{aeroledger_experimentos}. As de E1 a E5 entraram no \textit{commit} \texttt{168613d}, e as do E6, no \textit{commit} \texttt{31ad703}. A execução apresentada no Capítulo~\ref{chap:resultados} está no \textit{commit} \texttt{7b58932}, e nenhuma verificação mudou entre o registro e essa execução, inclusive as de E1 a E5, que atravessaram a atualização da biblioteca para a versão 0.6.0. O histórico mostra a ordem entre o registro das verificações e a execução registrada, mas não exclui execuções locais anteriores. Por isso, a principal garantia contra o ajuste dos critérios aos resultados é a origem das margens, que vêm da precisão de publicação e da exatidão do gabarito, e não dos valores obtidos.
 
 \section{Verificação interna e comparação externa}\label{sec:validacao}
 
