@@ -909,8 +909,8 @@ FUNCTION {format.date}
 	{ "existe o campo month (mês) mas não o campo year (ano) em " cite$ * warning$ month}
       if$}
     { month empty$
-	{ year n.dashify}
-	{ month " " * year * }
+	{ year n.dashify extra.label * }
+	{ month " " * year * extra.label * }
       if$}
   if$
 }
@@ -1102,7 +1102,7 @@ FUNCTION {filter.url.html}
  "" 't :=                      % Initialize the processed string as empty
  #1 'url.pos :=                % Start position at the first character
  s text.length$ 'url.length := % Determine the length of the input string
-  {url.pos url.length <=}      % Loop until the position exceeds the length
+  {url.pos url.length > not}      % Loop until the position exceeds the length
     {s url.pos #1 substring$   % Extract the current character
     duplicate$ 
       "%" = {pop$ "\%"}        % Replace `%` with `\%`
@@ -1263,7 +1263,7 @@ FUNCTION {format.year}
    { "campo year vazio ou faltando em " cite$ *
     abnt.missing.year {" (vou colocar [s.d.])" *} 'skip$ if$ warning$
     abnt.missing.year {", " } {""} if$ bbl.missing.year *}
-    {year n.dashify "year" bibinfo.check}
+    {year n.dashify extra.label * "year" bibinfo.check}
 if$
 }
 
