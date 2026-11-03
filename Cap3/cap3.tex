@@ -55,19 +55,19 @@ O serviço deve informar, para cada valor, quem o afirmou, por que motivo e com 
 
 \subsection{Reconstrução no tempo}\label{sec:req-tempo}
 
-O serviço deve reconstruir o conteúdo de qualquer produto em qualquer instante passado, sem depender de que o usuário tenha guardado a edição correspondente. Este trabalho adota um único eixo de tempo, o de transação (Seção~\ref{sec:bitemporal}), por dois motivos. O primeiro é documental, o que se pretende auditar é o que foi oficialmente afirmado em cada instante, e o tempo de transação responde exatamente a isso. O segundo é metodológico, o segundo eixo traz complexidade própria, como a consulta em duas dimensões e o fim de validade calculável apenas na leitura, que exigiria uma avaliação à parte.
+O serviço deve reconstruir o conteúdo de qualquer produto em qualquer instante passado, sem depender de que o usuário tenha guardado a edição correspondente. Este trabalho adota um único eixo de tempo, o de transação (Seção~\ref{sec:bitemporal}), por dois motivos. O primeiro é documental: o que se pretende auditar é o que foi oficialmente afirmado em cada instante, e o tempo de transação responde exatamente a isso. O segundo é metodológico: o segundo eixo traz complexidade própria, como a consulta em duas dimensões e o fim de validade calculável apenas na leitura, que exigiria uma avaliação à parte.
 
 O tempo de validade fica, assim, como extensão. Ele importa porque, sem ele, um erro de dado pode passar por erro operacional. Uma sinalização ou uma distância publicadas de forma errada levam os operadores a criar hábitos para compensá-las, e o registro não mostra que a condição real era outra desde o início.
 
 \subsection{Consistência entre produtos}\label{sec:req-consistencia}
 
-Dois produtos referentes ao mesmo instante não podem divergir. O PANS-AIM já exige consistência entre os produtos de informação aeronáutica \cite{icao2018pansaim}. O requisito torna essa exigência verificável, quando dois produtos divergem, deve ser possível identificar se a causa é o instante consultado ou a regra de cálculo aplicada.
+Dois produtos referentes ao mesmo instante não podem divergir. O PANS-AIM já exige consistência entre os produtos de informação aeronáutica \cite{icao2018pansaim}. O requisito torna essa exigência verificável: quando dois produtos divergem, deve ser possível identificar se a causa é o instante consultado ou a regra de cálculo aplicada.
 
 \subsection{Mínimo de informação}\label{sec:req-minimo}
 
 O serviço deve guardar apenas o que não pode ser calculado a partir de outros dados. Comprimentos, azimutes e distâncias declaradas resultam de posições medidas e de regras normativas (Seção~\ref{sec:distancias}). Guardá-los ao lado das premissas cria duas fontes para a mesma informação, que podem se contradizer.
 
-O SBSJ ilustra esse risco (Figura~\ref{fig:aip-ad212}). Na seção AD~2.12 da AIP, as observações sobre a pista mencionam a cabeceira~34 como deslocada. Na seção AD~2.13, contudo, a LDA da direção~34 é igual à TORA, o que corresponde a um deslocamento nulo. O texto e a tabela não podem estar ambos certos, e a publicação não permite saber qual dos dois prevalece, quando a LDA é calculada a partir do deslocamento, registrado como premissa, essa contradição deixa de ser possível.
+O SBSJ ilustra esse risco (Figura~\ref{fig:aip-ad212}). Na seção AD~2.12 da AIP, as observações sobre a pista mencionam a cabeceira~34 como deslocada. Na seção AD~2.13, contudo, a LDA da direção~34 é igual à TORA, o que corresponde a um deslocamento nulo. O texto e a tabela não podem estar ambos certos, e a publicação não permite saber qual dos dois prevalece. Quando a LDA é calculada a partir do deslocamento, registrado como premissa, essa contradição deixa de ser possível.
 
 \begin{figure}[htbp]
     \centering
