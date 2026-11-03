@@ -167,7 +167,19 @@ O identificador do evento (\texttt{event\_id}) segue o esquema Snowflake \cite{t
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.5\linewidth]{Figures/snowflake_id.png}
+    \begin{tikzpicture}[x=0.17cm, y=1cm, font=\small,
+        campo/.style={draw, minimum height=0.9cm, anchor=south west, inner sep=0pt}]
+        % larguras proporcionais ao número de bits: 41 | 10 | 12
+        \node[campo, fill=blue!8,  minimum width=41*0.17cm] at (0,0)  {instante (ms desde a época)};
+        \node[campo, fill=gray!10, minimum width=10*0.17cm] at (41,0) {partição};
+        \node[campo, fill=blue!8,  minimum width=12*0.17cm] at (51,0) {sequência};
+        \foreach \a/\b/\n in {0/41/41, 41/51/10, 51/63/12} {
+            \draw[decorate, decoration={brace, amplitude=4pt}] (\a+0.2,1.05) -- (\b-0.2,1.05)
+                node[midway, above=4pt] {\n\ \textit{bits}};
+        }
+        \node[anchor=north west, font=\footnotesize] at (0,-0.1) {bit 62};
+        \node[anchor=north east, font=\footnotesize] at (63,-0.1) {bit 0};
+    \end{tikzpicture}
     \caption{Composição do identificador de um evento.}
     \label{fig:snowflakeid}
     \par\smallskip{\small Fonte: o autor.}
