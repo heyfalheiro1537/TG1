@@ -4,7 +4,7 @@ As Seções~\ref{sec:visao-geral} a~\ref{sec:banco-extraido} descrevem a arquite
 
 \section{Visão geral}\label{sec:visao-geral}
 
-A arquitetura parte de uma ideia central. O dado primário não é o estado do aeródromo, mas a sequência de afirmações feitas sobre ele, e o estado em qualquer instante é calculado a partir dessa sequência. Essa organização corresponde ao padrão \textit{event sourcing} (Seção~\ref{sec:event-sourcing}), onde cada alteração é gravada como um evento, e os eventos nunca são alterados. O estado, então, resulta da composição dos eventos até o instante pedido.
+A arquitetura parte de uma ideia central. O dado primário não é o estado do aeródromo, mas a sequência de afirmações feitas sobre ele, e o estado em qualquer instante é calculado a partir dessa sequência. Essa organização corresponde ao padrão \textit{event sourcing} (Seção~\ref{sec:event-sourcing}), onde cada alteração é gravada como um evento, e os eventos nunca são alterados. O estado, então, resulta da composição dos eventos até o instante pedido. A imutabilidade, neste trabalho, é uma regra da escrita, e não uma impossibilidade física: a biblioteca não oferece atualização nem exclusão, e o banco as recusa por gatilhos, mas quem administra o banco pode contorná-los. O que a arquitetura assegura é que uma alteração feita assim deixa evidência verificável, nos termos e com os limites da Seção~\ref{sec:verificacao}.
 
 A essa ideia soma-se a separação entre escrita e leitura (CQRS). Do lado da escrita, um único ponto de entrada valida e grava os eventos, e o que ele grava é a única fonte de verdade. Do lado da leitura, cada produto é um modelo de leitura montado a partir dos mesmos eventos, como, por exemplo, o conteúdo de uma carta ou uma tabela de distâncias declaradas. Os modelos de leitura podem ser vários, podem mudar e podem ser apagados e reconstruídos, pois não guardam nada que não esteja nos eventos.
 
@@ -152,7 +152,7 @@ O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, n
 
 \section{Tempo}\label{sec:tempo}
 
-A arquitetura usa uma única linha do tempo, o tempo de transação, isto é, o instante em que cada evento foi registrado (Seção~\ref{sec:bitemporal}). Os motivos dessa escolha estão na Seção~\ref{sec:req-tempo}. Cada aeródromo tem a sua cadeia de eventos, e cada cadeia tem um relógio que só avança, de modo que nada se escreve no passado. A Figura~\ref{fig:linha-tempo} ilustra a linha do tempo de duas \textit{features}.
+A arquitetura usa uma única linha do tempo, o tempo de transação, isto é, o instante em que cada evento foi registrado (Seção~\ref{sec:bitemporal}). Os motivos dessa escolha estão na Seção~\ref{sec:req-tempo}. Cada aeródromo tem a sua cadeia de eventos, e cada cadeia tem um relógio que só avança, de modo que nada se escreve no passado. Nos experimentos, esse relógio é de simulação: começa na data de efetividade da edição carregada e é avançado pelo próprio cenário, como nos trinta dias entre a carga e a remedição. Ele preserva a propriedade que importa, a de nunca andar para trás, mas não é o relógio do computador, que seria o usado em operação. A Figura~\ref{fig:linha-tempo} ilustra a linha do tempo de duas \textit{features}.
 
 \begin{figure}[h]
     \centering
@@ -353,7 +353,7 @@ Cada evento guarda o \textit{hash} do evento anterior na mesma cadeia e o seu pr
     h_i = \mathrm{SHA\text{-}256}\big(\mathrm{JCS}(\mathit{env}_i,\, h_{i-1},\, C_i)\big)
     \label{eq:hash}
 \end{equation}
-em que $\mathit{env}_i$ é o envelope completo do evento, incluindo o identificador, o autor, o motivo, a causa e, quando houver, os campos do grupo. O termo $h_{i-1}$ é o \textit{hash} do evento anterior, e $C_i$ é a lista de campos do corpo, ordenada pelo caminho. JCS é a forma canônica de JSON definida na RFC~8785 \cite{rfc8785}, que fixa a ordem das chaves, a ausência de espaços e a representação dos números. Os campos do grupo só entram quando presentes, de modo que um evento fora de grupo não carrega campos vazios no \textit{hash}.
+em que $\mathit{env}_i$ é o envelope completo do evento, incluindo o identificador, o autor, o motivo, a causa e, quando houver, os campos do grupo. O termo $h_{i-1}$ é o \textit{hash} do evento anterior, e $C_i$ é a lista de campos do corpo, ordenada pelo caminho. JCS é a forma canônica de JSON definida na RFC~8785 \cite{rfc8785}, que fixa a ordem das chaves, a ausência de espaços e a representação dos números. Os campos do grupo só entram quando presentes, de modo que um evento fora de grupo não carrega campos vazios no \textit{hash}. Concretamente, o conteúdo submetido ao JCS é um único objeto JSON com os campos do envelope (\texttt{event\_id}, \texttt{run\_id}, \texttt{feature\_id}, \texttt{feature\_type}, \texttt{event\_type}, \texttt{asserted\_by}, \texttt{owner\_ref}, \texttt{reason}, \texttt{caused\_by} e, quando houver, \texttt{grupo\_id} e \texttt{grupo\_n}), o campo \texttt{prev\_hash} e o campo \texttt{campos}, que é a lista dos campos do corpo, cada um como um objeto com \texttt{path}, \texttt{op} e \texttt{next}. Os campos do envelope sem valor entram como nulos, e o \texttt{prev\_hash} do primeiro evento de uma cadeia é nulo. O \textit{hash} é o SHA-256 dos \textit{bytes} UTF-8 dessa forma canônica, escrito em hexadecimal minúsculo. Como o identificador da cadeia (\texttt{run\_id}) entra no \textit{hash}, um evento não pode ser transplantado de uma cadeia para outra sem quebrá-la.
 
 A forma canônica é o que permite a um terceiro refazer o cálculo em outra linguagem e chegar ao mesmo resultado. Sem ela, o mesmo conteúdo admitiria várias serializações, com \textit{hashes} diferentes. Como a causa, o autor e o grupo entram no \textit{hash}, trocar a causa de um evento ou retirá-lo de um grupo quebra a cadeia da mesma forma que trocar qualquer valor.
 
@@ -361,7 +361,7 @@ O referencial fica fora da cadeia, guardado à parte, mas está protegido de for
 
 \subsection{Serialização}
 
-A escrita é serializada por cadeia, com um único ponto de ordenação por aeródromo. Com isso, a ordem dos eventos, a dos identificadores e a da cadeia coincidem sem nenhum cuidado adicional, e um grupo é contíguo por construção. Para o volume de um aeródromo, com poucas escritas por ciclo AIRAC, essa solução é suficiente, assim, a escrita privilegia a consistência. O ponto de ordenação pode ficar indisponível por algum tempo, mas nunca grava fora de ordem. As formas de receber escritas de várias fontes simultaneamente estão entre as propostas da Seção~\ref{sec:extensoes}.
+A escrita é serializada por cadeia, com um único ponto de ordenação por aeródromo. Com isso, a ordem dos eventos, a dos identificadores e a da cadeia coincidem sem nenhum cuidado adicional, e um grupo é contíguo por construção. Para o volume de um aeródromo, com poucas escritas por ciclo AIRAC, essa solução deve ser suficiente, embora o seu custo não tenha sido medido, e a escrita privilegia a consistência. O ponto de ordenação pode ficar indisponível por algum tempo, mas nunca grava fora de ordem. As formas de receber escritas de várias fontes simultaneamente estão entre as propostas da Seção~\ref{sec:extensoes}.
 
 \section{A leitura no registro}\label{sec:leitura}
 
@@ -462,7 +462,23 @@ Três regras preservam os requisitos da Seção~\ref{sec:requisitos} nesse cená
 
 A segunda regra é a do limite explícito. Toda leitura declara até onde vai, como \texttt{event\_id} ou como instante, e não existe leitura ``do mais recente''. Se o limite ultrapassa o que o consumidor já recebeu, ele recusa a leitura em vez de responder com um estado desatualizado.
 
-A terceira regra é a da regra identificada. Como cada consumidor calcula os seus próprios derivados, a consistência entre produtos passa a depender de que todos apliquem a mesma regra. A regra é identificada pelo \textit{hash} do código que deriva os valores, e a resposta a declara.
+A terceira regra é a da regra identificada. Como cada consumidor calcula os seus próprios derivados, a consistência entre produtos passa a depender de que todos apliquem a mesma regra. A regra é identificada pelo \textit{hash} do código que deriva os valores, e a resposta a declara. A identificação, porém, não garante a reprodução. O \textit{hash} aponta uma versão, mas reproduzir um resultado antigo exige que o código dessa versão continue disponível e executável, e saber se ele correspondia à norma vigente no instante consultado é outra verificação. Na implementação, o \textit{hash} é o do módulo de derivações inteiro, e a disponibilidade depende de a versão estar fixada no repositório da biblioteca. A Tabela~\ref{tab:versoes-regra} lista as versões da regra usadas neste trabalho.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Versões da regra de derivação usadas neste trabalho.}
+    \label{tab:versoes-regra}
+    \small
+    \begin{tabularx}{\linewidth}{l l l X}
+        \toprule
+        Versão & \textit{Commit} & \textit{Hash} da regra & O que muda \\
+        \midrule
+        0.6.0 & \texttt{e93b718} & \texttt{6a99f0bec22e}\ldots & ausência de deslocamento, de zona de parada ou de zona livre de obstáculos lida como zero \\
+        0.7.0 & \texttt{fe478ea} & \texttt{daa2146826f7}\ldots & premissas das direções declaradas; recusa por valor quando faltam ou contradizem as \textit{features} \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
 
 \subsection{O recorte de cada consumidor}
 
@@ -517,7 +533,7 @@ Essas alterações só são detectadas comparando a cabeça da cadeia, formada p
 
 \subsection{Cadeia linear e árvore de Merkle}
 
-A árvore de Merkle oferece provas curtas de inclusão e de consistência (Seção~\ref{sec:adulteracao}), enquanto, na cadeia linear, o verificador refaz o percurso inteiro. Para o volume de um aeródromo, refazer o percurso tem custo baixo, e a cadeia é mais simples de especificar e de reimplementar, o que favorece justamente a verificação por terceiros. A árvore passa a valer a pena quando o registro cresce muito, ou quando é preciso provar um evento isolado a quem não deve receber o restante.
+A árvore de Merkle oferece provas curtas de inclusão e de consistência (Seção~\ref{sec:adulteracao}), enquanto, na cadeia linear, o verificador refaz o percurso inteiro. Para o volume de um aeródromo, refazer o percurso deve ter custo baixo, o que não foi medido, e a cadeia é mais simples de especificar e de reimplementar, o que favorece justamente a verificação por terceiros. A árvore passa a valer a pena quando o registro cresce muito, ou quando é preciso provar um evento isolado a quem não deve receber o restante.
 
 \section{O banco extraído}\label{sec:banco-extraido}
 
@@ -590,7 +606,7 @@ A biblioteca tem 60 testes próprios, sobre um aeródromo fictício, cada um exe
 
 \subsection{Cenário}
 
-Os experimentos usam duas cadeias. A cadeia \texttt{aixm} guarda a pista na forma em que as publicações chegam ao usuário e serve apenas ao E1. A cadeia \texttt{sbsj} guarda a pista no modelo proposto, com os dez eventos da Tabela~\ref{tab:eventos-sbsj}, na ordem em que os experimentos os escrevem. Essa ordem compreende a carga do eAIP como um grupo de cinco eventos (E2), a remedição da cabeceira~34 trinta dias depois (E2), uma interdição de três dias (E3) e uma restrição nova escrita durante o E6. Nenhum evento contém comprimento, azimute ou distância declarada, e todos esses valores são calculados na leitura (Seção~\ref{sec:derivados}). As premissas da carga vêm da AIP. A remedição e as restrições são simuladas, para exercitar o ciclo de vida.
+Os experimentos usam duas cadeias. A cadeia \texttt{publicado} guarda a pista na forma em que as publicações chegam ao usuário e serve apenas ao E1. A cadeia \texttt{sbsj} guarda a pista no modelo proposto, com os dez eventos da Tabela~\ref{tab:eventos-sbsj}, na ordem em que os experimentos os escrevem. Essa ordem compreende a carga do eAIP como um grupo de cinco eventos (E2), a remedição da cabeceira~34 trinta dias depois (E2), uma interdição de três dias (E3) e uma restrição nova escrita durante o E6. Nenhum evento contém comprimento, azimute ou distância declarada, e todos esses valores são calculados na leitura (Seção~\ref{sec:derivados}). As premissas da carga vêm da AIP. A remedição e as restrições são simuladas, para exercitar o ciclo de vida.
 
 \begin{table}[htbp]
     \centering
@@ -618,7 +634,7 @@ Cada direção declara deslocamento nulo e a ausência de zona livre de obstácu
 
 As perguntas e os critérios de aprovação de cada experimento estão na Seção~\ref{sec:experimentos}. Esta seção descreve como cada um é executado sobre o cenário.
 
-\paragraph*{E1: causa.} A cadeia \texttt{aixm} não emula o AIXM completo, apenas as duas edições que o usuário recebe, com cada número publicado guardado como campo e sem causa. A pista é registrada com os valores da AOC de 2022 e, em seguida, alterada com os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e verifica-se se algum deles traz causa.
+\paragraph*{E1: causa.} A cadeia \texttt{publicado} não emula o AIXM completo, apenas as duas edições que o usuário recebe, com cada número publicado guardado como campo e sem causa. A pista é registrada com os valores da AOC de 2022 e, em seguida, alterada com os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e verifica-se se algum deles traz causa.
 
 \paragraph*{E2: derivação.} Entram no registro apenas as premissas, isto é, as coordenadas e elevações das cabeceiras, a largura da pista, as dimensões da zona de parada e, para cada direção, o deslocamento da cabeceira e a presença de zona de parada e de zona livre de obstáculos. O comprimento, os azimutes, os rumos magnéticos e as distâncias declaradas são calculados e comparados com os valores da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m. Conferem-se então os eventos escritos e os novos valores contra o gabarito de Vincenty.
 
@@ -790,6 +806,16 @@ junto com o banco extraído, em um repositório com histórico verificável.
 A comparação com uma referência obtida por um canal independente permitiria
 detectar alterações posteriores ao estado ancorado, desde que a referência
 publicada não pudesse ser substituída silenciosamente.
+
+A âncora só vale tanto quanto a separação entre quem a publica e quem
+controla o registro. Propõe-se que o órgão responsável pela publicação a
+emita junto com cada emenda, pelo mesmo canal oficial da AIP, e que qualquer
+recebedor possa compará-la com a cabeça do registro ou do banco extraído que
+recebeu. Uma âncora não é substituída: uma nova emenda publica uma nova
+cabeça, e as anteriores permanecem acessíveis, de modo que a cadeia de uma
+emenda deve conter, como prefixo, a da emenda anterior. Se o mesmo agente
+controlar o registro e o canal da âncora, a garantia se reduz à confiança
+nesse agente, e a reescrita completa volta a ser indetectável.
 
 Quando for necessário comprovar a inclusão de um evento sem compartilhar
 todo o registro, uma árvore de Merkle poderá fornecer uma prova compacta

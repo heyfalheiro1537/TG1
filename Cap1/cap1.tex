@@ -49,7 +49,7 @@ O problema abordado neste trabalho é, portanto, de rastreabilidade. Busca-se ga
     \item verificar que esse histórico não foi modificado.
 \end{itemize}
 
-Para tratar esse problema, este trabalho propõe uma arquitetura de dados em que cada alteração é registrada como um evento imutável, com autor e causa declarados. Os valores que podem ser calculados a partir de outros, como comprimentos e distâncias declaradas, não são armazenados: são derivados das premissas no momento da consulta. O princípio é o mesmo dos registros contábeis, em que nenhum lançamento é apagado e um erro é corrigido por um novo lançamento, com motivo declarado \cite{helland2016}. Os fundamentos dessa abordagem e a sua relação com os modelos de informação aeronáutica existentes são apresentados no Capítulo~\ref{chap:fundamentacao}.
+Para tratar esse problema, este trabalho propõe uma arquitetura de dados em que cada alteração é registrada como um novo evento, em um registro em que só se acrescenta, com autor e causa declarados. Os valores que podem ser calculados a partir de outros, como comprimentos e distâncias declaradas, não são armazenados: são derivados das premissas no momento da consulta. O princípio é o mesmo dos registros contábeis, em que nenhum lançamento é apagado e um erro é corrigido por um novo lançamento, com motivo declarado \cite{helland2016}. Os fundamentos dessa abordagem e a sua relação com os modelos de informação aeronáutica existentes são apresentados no Capítulo~\ref{chap:fundamentacao}.
 
 \section{Objetivos}
 
@@ -77,7 +77,7 @@ Propor e avaliar uma arquitetura de dados baseada em \textit{event sourcing} que
 
 \begin{itemize}
     \item Caracterizar a lacuna de rastreabilidade nas publicações aeronáuticas, a partir das diferenças entre as cartas oficiais do SBSJ e dos requisitos do PANS-AIM.
-    \item Propor uma arquitetura em que cada alteração seja registrada como evento imutável, com autor e causa declarados e encadeado por \textit{hash}. Nela, a geometria é representada pelas premissas que a geram, e os valores derivados são calculados no momento da consulta.
+    \item Propor uma arquitetura em que cada alteração seja registrada como um evento acrescentado a um registro que não admite edição nem exclusão, com autor e causa declarados e encadeado por \textit{hash}. Nela, a geometria é representada pelas premissas que a geram, e os valores derivados são calculados no momento da consulta.
     \item Implementar a arquitetura como biblioteca de código aberto, independente do experimento que a avalia.
     \item Avaliar a arquitetura por meio de seis experimentos sobre a pista do SBSJ, com dados reais, cada um dedicado a uma propriedade e com critérios de aprovação definidos antes da execução.
     \item Identificar os limites da auditabilidade obtida, distinguindo o que os experimentos demonstram do que é apenas argumentado.
