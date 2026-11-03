@@ -1,6 +1,4 @@
-O Capítulo~\ref{chap:metodologia} estabeleceu os requisitos que um serviço de dados auditável deve atender e o método pelo qual a solução é avaliada. Este capítulo desenvolve a solução e a aplica ao caso estudado.
-
-As Seções~\ref{sec:visao-geral} a~\ref{sec:banco-extraido} descrevem a arquitetura seguindo o caminho do dado. Primeiro, apresentam o que se guarda, isto é, o evento, o tempo e o referencial. Em seguida, mostram como se escreve e como se lê, como a leitura chega aos consumidores, como um terceiro confere o que recebeu e como o registro é entregue em um arquivo. A Seção~\ref{sec:implementacao} descreve a implementação, e a Seção~\ref{sec:aplicacao-sbsj}, a sua aplicação à pista do SBSJ. As Seções~\ref{sec:extensoes} e~\ref{sec:limites-arq} reúnem, respectivamente, o que foi desenhado sem ser avaliado e os limites conhecidos da arquitetura.
+Este capítulo desenvolve a solução para os requisitos do Capítulo~\ref{chap:metodologia}, seguindo o caminho do dado: o que se guarda, como se escreve e se lê, como a leitura chega aos consumidores e a terceiros. Em seguida, descreve a implementação (Seção~\ref{sec:implementacao}) e a sua aplicação ao SBSJ (Seção~\ref{sec:aplicacao-sbsj}).
 
 \section{Visão geral}\label{sec:visao-geral}
 
@@ -148,7 +146,7 @@ Algumas mudanças exigem mais de um evento. A carga de uma edição do AIP, por 
 
 Cada evento do grupo leva no envelope o \texttt{grupo\_id}, que é o identificador do primeiro evento, e o \texttt{grupo\_n}, que é o número de eventos do grupo. O primeiro campo registra quais eventos formam uma mesma mudança, o que o instante comum, por si só, não garante. O segundo permite a quem lê saber se já recebeu o grupo inteiro. Uma leitura cujo limite caia dentro de um grupo recua até antes dele, de modo que nenhum corte mostra uma mudança pela metade, seja na leitura do registro, seja no consumidor (Seção~\ref{sec:distribuicao}).
 
-O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, no qual as partidas de uma transferência entram juntas e o livro nunca mostra o débito sem o crédito. Há, contudo, uma diferença. Na contabilidade, as partidas de um lançamento somam zero, e uma transferência incompleta se denuncia sozinha. Aqui não há lei de conservação, e uma pista sem zona de parada é um estado plausível. As declarações de cada direção de pista (Seção~\ref{sec:derivados}) recuperam uma conferência parcial, pois uma zona de parada declarada e ausente leva à recusa da ASDA, mas nada equivalente existe para o restante do corpo, que é livre. A atomicidade, por isso, não pode depender de uma conferência posterior.
+O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, que nunca mostra o débito sem o crédito. Como aqui não há lei de conservação que denuncie uma mudança incompleta (Seção~\ref{sec:disc-analogia}), a atomicidade não pode depender de uma conferência posterior.
 
 \section{Tempo}\label{sec:tempo}
 
@@ -187,7 +185,7 @@ O identificador do evento (\texttt{event\_id}) segue o esquema Snowflake \cite{t
 
 Na leitura, o instante $t$ pode ser uma data e hora ou um \texttt{event\_id}, e ambos são convertidos em um limite superior de identificador. Uma data e hora corresponde ao maior identificador possível naquele milissegundo, e um \texttt{event\_id} distingue eventos do mesmo milissegundo, como os de um grupo. Toda consulta se reduz, assim, a ``tudo até o evento $N$''.
 
-A extensão para dois eixos de tempo está entre as propostas da Seção~\ref{sec:extensoes}, no qual uma data alegada por quem escreve, como a data de uma medição ou a entrada em vigor de uma emenda AIRAC, é conteúdo do corpo. 
+Uma data alegada por quem escreve, como a de uma medição ou a entrada em vigor de uma emenda AIRAC, é conteúdo do corpo, e não eixo de tempo; a extensão para dois eixos fica como trabalho futuro (Seção~\ref{sec:trabalhos-futuros}). 
 
 \section{Referencial e posição}\label{sec:referencial}
 
@@ -361,7 +359,7 @@ O referencial fica fora da cadeia, guardado à parte, mas está protegido de for
 
 \subsection{Serialização}
 
-A escrita é serializada por cadeia, com um único ponto de ordenação por aeródromo. Com isso, a ordem dos eventos, a dos identificadores e a da cadeia coincidem sem nenhum cuidado adicional, e um grupo é contíguo por construção. Para o volume de um aeródromo, com poucas escritas por ciclo AIRAC, essa solução deve ser suficiente, embora o seu custo não tenha sido medido, e a escrita privilegia a consistência. O ponto de ordenação pode ficar indisponível por algum tempo, mas nunca grava fora de ordem. As formas de receber escritas de várias fontes simultaneamente estão entre as propostas da Seção~\ref{sec:extensoes}.
+A escrita é serializada por cadeia, com um único ponto de ordenação por aeródromo. Com isso, a ordem dos eventos, a dos identificadores e a da cadeia coincidem sem nenhum cuidado adicional, e um grupo é contíguo por construção. Para o volume de um aeródromo, com poucas escritas por ciclo AIRAC, essa solução deve ser suficiente, embora o seu custo não tenha sido medido, e a escrita privilegia a consistência. O ponto de ordenação pode ficar indisponível por algum tempo, mas nunca grava fora de ordem. As formas de receber escritas de várias fontes simultaneamente estão entre as propostas da Seção~\ref{sec:trabalhos-futuros}.
 
 \section{A leitura no registro}\label{sec:leitura}
 
@@ -389,11 +387,11 @@ O requisito do mínimo de informação (Seção~\ref{sec:req-minimo}) é atendid
 \end{equation}
 em que $L$ é o comprimento da pista entre as suas extremidades, CWY e SWY são os comprimentos da zona livre de obstáculos e da zona de parada aplicáveis àquela direção, também calculados a partir das \textit{seeds}, e $d$ é o deslocamento da cabeceira, registrado como premissa da direção.
 
-O cálculo é recusado, em vez de estimado, quando falta uma premissa estrutural. Sem referencial vigente, não há derivado, e uma \textit{seed} incompleta já é recusada na escrita. Pela mesma razão, um caso para o qual não há regra definida, como uma pista com barreira de contenção, leva à recusa, e não a um número possivelmente errado. Pela mesma razão, a ausência de uma premissa não é lida como zero. Cada direção de pista declara o deslocamento da sua cabeceira, com zero permitido, e se há zona de parada e zona livre de obstáculos para a decolagem nessa direção. Sem a declaração, o valor que depende dela é recusado. Uma declaração que contradiz as \textit{features} registradas, como uma zona de parada declarada e não registrada, também é recusada. A recusa é feita por valor, de modo que a TORA de uma direção continua calculada mesmo quando a sua LDA é recusada. Essas declarações distinguem ``não se aplica'', afirmado como zero ou como ausência declarada, de ``não informado''. A distinção entre ``não informado'' e ``desconhecido'' e a sua extensão aos demais campos dependem da norma de preenchimento proposta na Seção~\ref{sec:extensoes}.
+O cálculo é recusado, em vez de estimado, quando falta uma premissa estrutural. Sem referencial vigente, não há derivado, e uma \textit{seed} incompleta já é recusada na escrita. Pela mesma razão, um caso para o qual não há regra definida, como uma pista com barreira de contenção, leva à recusa, e não a um número possivelmente errado. Pela mesma razão, a ausência de uma premissa não é lida como zero. Cada direção de pista declara o deslocamento da sua cabeceira, com zero permitido, e se há zona de parada e zona livre de obstáculos para a decolagem nessa direção. Sem a declaração, o valor que depende dela é recusado. Uma declaração que contradiz as \textit{features} registradas, como uma zona de parada declarada e não registrada, também é recusada. A recusa é feita por valor, de modo que a TORA de uma direção continua calculada mesmo quando a sua LDA é recusada. Essas declarações distinguem ``não se aplica'', afirmado como zero ou como ausência declarada, de ``não informado''. A distinção entre ``não informado'' e ``desconhecido'' e a sua extensão aos demais campos dependem da norma de preenchimento proposta na Seção~\ref{sec:trabalhos-futuros}.
 
 \subsection{Modelos de leitura e caches}
 
-Cópias podem acelerar a leitura sem se tornar fonte de verdade. Uma delas é o estado de uma \textit{feature} ao fim de um evento, a partir do qual se aplicam apenas os eventos posteriores. Outra é o resultado de uma seleção por tipos e camadas em $t$, identificado por uma marca d'água, que é o maior \texttt{event\_id} até $t$ entre os eventos dos tipos selecionados. Um evento fora da seleção não move a marca e não invalida a cópia. Essas cópias podem ser apagadas a qualquer momento, e nenhuma escrita as lê. Um valor derivado pode, assim, ser guardado para acelerar a leitura, desde que essa cópia nunca sirva de premissa para outro cálculo.
+Cópias podem acelerar a leitura sem se tornar fonte de verdade, como o estado de uma \textit{feature} ao fim de um evento ou o resultado de uma seleção por tipos e camadas, identificado pelo maior \texttt{event\_id} dos tipos selecionados. Elas podem ser apagadas a qualquer momento, nenhuma escrita as lê, e um valor derivado guardado nelas nunca serve de premissa para outro cálculo. O seu efeito sobre o custo de leitura não foi avaliado.
 
 A lente da carta de aeródromo é um exemplo de modelo de leitura. Ela monta o conteúdo de uma ADC em $t$ lendo apenas as camadas \texttt{adc} e \texttt{geometria} dos tipos que a carta mostra. Tudo o mais que o registro guarda, como os levantamentos, fica de fora sem ser lido. A tabela de distâncias da lente resulta da mesma regra da Equação~\ref{eq:distancias-declaradas}, sobre o mesmo referencial vigente. É dessa forma que se atende ao requisito de consistência entre produtos (Seção~\ref{sec:req-consistencia}). A carta e a tabela não guardam valores próprios, e duas leituras para o mesmo instante partem das mesmas afirmações.
 
@@ -404,7 +402,7 @@ Se todo produto for lido diretamente do banco, o banco passa a ser um ponto úni
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{Figures/fig_arquitetura_pubsub.pdf}
-    \caption{Distribuição da leitura. O registro é publicado em ordem em um tópico geral, e cada consumidor monta a sua projeção. Tudo à direita do registro é derivado e pode ser reconstruído a partir dele. A fila de escrita e a réplica síncrona, à esquerda, são extensões propostas (Seção~\ref{sec:extensoes}).}
+    \caption{Distribuição da leitura. O registro é publicado em ordem em um tópico geral, e cada consumidor monta a sua projeção. Tudo à direita do registro é derivado e pode ser reconstruído a partir dele. A fila de escrita e a réplica síncrona, à esquerda, são extensões propostas (Seção~\ref{sec:trabalhos-futuros}).}
     \label{fig:distribuicao}
     \par\smallskip{\small Fonte: o autor.}
 \end{figure}
@@ -529,7 +527,9 @@ A mesma verificação aparece em três pontos da arquitetura. O registro verific
 
 O encadeamento denuncia qualquer alteração que deixe um sucessor. Alterar, apagar ou inserir um evento no meio do registro, ou uma mensagem no meio do tópico, quebra a cadeia a partir daquele ponto, mesmo que o atacante recalcule o \textit{hash} do evento alterado. Há, porém, alterações que não deixam sucessor para denunciá-las. No banco, é o caso de modificar apenas o último evento, truncar o final ou reescrever a cadeia inteira, recalculando todos os \textit{hashes}. No tópico, é o caso de cortar o fim, o que se confunde com atraso, ou anexar ao fim um evento falso que se liga corretamente ao último verdadeiro.
 
-Essas alterações só são detectadas comparando a cabeça da cadeia, formada pelo último \texttt{event\_id} e pelo seu \textit{hash}, com uma âncora guardada fora do banco (Seção~\ref{sec:adulteracao}). O registro e o consumidor expõem a cabeça para esse fim, e o armazenamento e a comparação da âncora estão entre as propostas (Seção~\ref{sec:extensoes}). O encadeamento prova, portanto, que nada do que se recebeu foi alterado, mas não que se recebeu tudo.
+Essas alterações só são detectadas comparando a cabeça da cadeia, formada pelo último \texttt{event\_id} e pelo seu \textit{hash}, com uma âncora guardada fora do banco (Seção~\ref{sec:adulteracao}). O registro e o consumidor expõem a cabeça para esse fim, mas o armazenamento e a comparação da âncora não foram implementados. O encadeamento prova, portanto, que nada do que se recebeu foi alterado, mas não que se recebeu tudo.
+
+Propõe-se que o órgão responsável pela publicação emita a cabeça da cadeia junto com cada emenda AIRAC, pelo mesmo canal oficial da AIP, e que qualquer recebedor possa compará-la com a cabeça do registro ou do banco extraído que recebeu. Uma âncora não é substituída: cada emenda publica uma nova cabeça, e a cadeia de uma emenda deve conter, como prefixo, a da anterior. A âncora só vale tanto quanto a separação entre quem a publica e quem controla o registro. Se o mesmo agente controlar os dois, a garantia se reduz à confiança nesse agente.
 
 \subsection{Cadeia linear e árvore de Merkle}
 
@@ -594,7 +594,7 @@ A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.7.0 
 
 A implementação difere da arquitetura em quatro pontos, que limitam o alcance dos experimentos:
 \begin{itemize}
-    \item a escrita é serializada por um bloqueio pessimista da linha da execução (\texttt{SELECT ... FOR UPDATE}), e as formas de escrita com várias fontes da Seção~\ref{sec:extensoes} não estão implementadas;
+    \item a escrita é serializada por um bloqueio pessimista da linha da execução (\texttt{SELECT ... FOR UPDATE}), e as formas de escrita com várias fontes da Seção~\ref{sec:trabalhos-futuros} não estão implementadas;
     \item o tópico é mantido em memória (\texttt{TopicoMemoria}), com o mesmo contrato que um sistema de mensagens cumpriria, isto é, anexar e ler a partir de uma posição;
     \item a regra das distâncias declaradas com barreira de contenção não está implementada, e a biblioteca recusa o cálculo quando há uma barreira viva;
     \item o motor de geometria é uma demonstração, que desenha a carta a partir do registro, mas não foi validado contra as cartas oficiais.
@@ -632,244 +632,16 @@ Cada direção declara deslocamento nulo e a ausência de zona livre de obstácu
 
 \subsection{Procedimentos dos experimentos}\label{sec:procedimentos}
 
-As perguntas e os critérios de aprovação de cada experimento estão na Seção~\ref{sec:experimentos}. Esta seção descreve como cada um é executado sobre o cenário.
+As perguntas e os critérios de aprovação estão na Seção~\ref{sec:experimentos}, e os ataques do E4 e do E6, nas Tabelas~\ref{tab:res-e4} e~\ref{tab:res-e6}. O instante $t_a$, logo após a carga do eAIP, serve de referência a todos os experimentos.
 
-\paragraph*{E1: causa.} A cadeia \texttt{publicado} não emula o AIXM completo, apenas as duas edições que o usuário recebe, com cada número publicado guardado como campo e sem causa. A pista é registrada com os valores da AOC de 2022 e, em seguida, alterada com os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e verifica-se se algum deles traz causa.
+\paragraph*{E1.} A cadeia \texttt{publicado} recebe a pista com os valores da AOC de 2022 e, em seguida, os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e as causas registradas.
 
-\paragraph*{E2: derivação.} Entram no registro apenas as premissas, isto é, as coordenadas e elevações das cabeceiras, a largura da pista, as dimensões da zona de parada e, para cada direção, o deslocamento da cabeceira e a presença de zona de parada e de zona livre de obstáculos. O comprimento, os azimutes, os rumos magnéticos e as distâncias declaradas são calculados e comparados com os valores da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m. Conferem-se então os eventos escritos e os novos valores contra o gabarito de Vincenty.
+\paragraph*{E2.} Entram no registro apenas as premissas: as coordenadas e elevações das cabeceiras, a largura da pista, as dimensões da zona de parada e, para cada direção, o deslocamento da cabeceira e a presença de zona de parada e de zona livre de obstáculos. Os valores calculados são comparados com os da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m, e conferem-se os eventos escritos e os novos valores contra o gabarito de Vincenty.
 
-\paragraph*{E3: reconstrução no tempo.} Após a remedição, uma interdição de 300~m a partir da cabeceira~34 entra como restrição, com a pista como dona, e é encerrada três dias depois. O banco é então consultado como um auditor faria, em instantes anteriores, intermediários e posteriores a cada mudança. São consultados:
-\begin{itemize}
-    \item o referencial vigente e o comprimento derivado;
-    \item a existência da interdição;
-    \item o envelope da troca de referencial;
-    \item as distâncias declaradas recalculadas para um instante passado;
-    \item a diferença entre dois instantes.
-\end{itemize}
-O instante $t_a$, logo após a carga do eAIP, serve de referência ao longo deste e dos experimentos seguintes.
+\paragraph*{E3.} Uma interdição de 300~m a partir da cabeceira~34 entra como restrição, com a pista como dona, e é encerrada três dias depois. O banco é consultado como um auditor faria, antes, durante e depois de cada mudança: o referencial vigente, o comprimento, a existência da interdição, o envelope da troca de referencial, as distâncias de um instante passado e a diferença entre dois instantes.
 
-\paragraph*{E4: evidência de adulteração.} O atacante tem acesso direto ao banco. Antes dos ataques, a cabeça da cadeia é anotada fora do banco, como âncora. São executados quatro ataques:
-\begin{itemize}
-    \item alterar o corpo de um evento sem recalcular o \textit{hash};
-    \item apagar um evento;
-    \item inserir um evento com \textit{hash} próprio correto;
-    \item alterar um evento e recalcular todos os \textit{hashes} até o fim.
-\end{itemize}
-Cada ataque é executado em uma cópia do banco e conferido de duas formas, pela verificação interna da cadeia e pela comparação com a âncora.
+\paragraph*{E4.} Com acesso direto ao banco, o atacante executa quatro ataques, cada um em uma cópia do banco. Cada ataque é conferido pela verificação interna da cadeia e pela comparação com a cabeça anotada antes, fora do banco.
 
-\paragraph*{E5: consistência e verificação.} Dois produtos são gerados do mesmo banco, antes e depois da remedição. O primeiro é a tabela da AIP, com o comprimento e as distâncias declaradas, e o segundo, o conteúdo da carta de aeródromo. Em seguida, o registro é exportado em JSON e entregue ao verificador independente, primeiro intacto e depois com a largura da pista alterada em um metro no arquivo.
+\paragraph*{E5.} A tabela da AIP e o conteúdo da carta de aeródromo são gerados do mesmo banco, antes e depois da remedição. O registro exportado em JSON é entregue ao verificador independente, primeiro intacto e depois com a largura da pista alterada em 1~m.
 
-\paragraph*{E6: leitura separada.} O registro é retransmitido para o tópico, e as seis propriedades do E6 são exercitadas da seguinte forma:
-\begin{itemize}
-    \item \textbf{equivalência}: um consumidor lê todo o tópico, e as suas respostas são comparadas com as do banco em cada fronteira de corte do histórico e em três instantes, a saber, logo após a carga, durante a interdição e um segundo antes do seu fim;
-    \item \textbf{atomicidade}: o banco e o consumidor são consultados com um limite que cai dentro da carga do eAIP, logo após a pista e antes das cabeceiras e da zona de parada; no mesmo ponto, consulta-se a primitiva SQL de estado, que não conhece grupos, e aplica-se a regra das distâncias ao estado parcial que ela mostra;
-    \item \textbf{recorte}: um consumidor que assina apenas a cabeceira~16 é comparado com o que lê tudo;
-    \item \textbf{limite explícito e disponibilidade}: uma restrição nova é escrita no banco, e o consumidor é consultado sobre ela antes e depois de recebê-la, e novamente com o banco fechado;
-    \item \textbf{determinismo}: seis consumidores leem o tópico de formas diferentes, e comparam-se os \textit{hashes} das respostas no mesmo limite. As formas são tudo de uma vez; em laço, uma mensagem por vez; em lotes de duas mensagens, menores que a carga; por agendamento; com uma queda no meio e retomada a partir de uma posição gravada em arquivo; e a partir de um tópico refeito do zero;
-    \item \textbf{canal adulterado}: o atacante está no canal, e o banco não é tocado.
-\end{itemize}
-
-No canal adulterado, o alvo é a mensagem da troca de referencial, e alterá-la equivale a fazer o tópico afirmar que o referencial antigo continua vigente. São seis ataques:
-\begin{itemize}
-    \item trocar o referencial sem recalcular o \textit{hash};
-    \item trocar o referencial e recalcular o \textit{hash} da mensagem;
-    \item remover a mensagem;
-    \item inserir depois dela um evento falso com ligação e \textit{hash} corretos;
-    \item remover as últimas mensagens;
-    \item anexar ao fim um evento falso com ligação e \textit{hash} corretos.
-\end{itemize}
-
-\subsection{Geração do banco extraído}
-
-O banco extraído é gerado por um programa que escreve, por meio da biblioteca, o mesmo cenário dos experimentos em um PostgreSQL vazio. Em seguida, o programa exporta o resultado para SQLite com consultas SQL diretas, sem passar pela biblioteca, e confere o arquivo com o verificador independente.
-
-A fidelidade da exportação é verificada de três formas. A primeira é a integridade e a cabeça das duas cadeias no arquivo. A segunda é o comprimento calculado pelo verificador a partir do referencial exportado. A terceira é a consulta de estado no SQLite, feita apenas com as visões do arquivo e comparada com a da biblioteca em todos os pares de corte e \textit{feature}.
-
-\section{Extensões propostas}\label{sec:extensoes}
-
-A arquitetura pode ser ampliada para atender a cenários de escrita
-concorrente, padronização dos dados, distribuição em maior escala, consultas
-mais expressivas e verificação independente do histórico. As extensões
-descritas a seguir são propostas e não foram implementadas nem avaliadas
-experimentalmente. Elas preservam o registro como fonte das afirmações,
-acrescentando mecanismos nas etapas de escrita, distribuição ou leitura.
-
-\subsection{Escrita com várias fontes}
-
-A informação aeronáutica combina dados provenientes de diferentes agentes,
-como operadores de aeródromos, órgãos de informação aeronáutica e equipes
-de levantamento. Para acomodar essas fontes sem comprometer a ordem do
-histórico, propõe-se um escritor único por cadeia, precedido por uma fila
-de comandos. Cada comando recebe uma chave de idempotência, permitindo
-reconhecer reenvios e evitar gravações duplicadas. O escritor valida os
-comandos, registra os eventos em sequência e confirma sua aceitação ao
-remetente.
-
-A concorrência também pode ser controlada por \textit{feature}. Para
-escrever, o agente informa o último \texttt{event\_id} que observou.
-Se a \textit{feature} tiver sido alterada desde então, a operação é recusada
-e o agente deve consultar o estado atualizado antes de tentar novamente.
-Esse controle otimista evita que uma alteração seja aceita com base em
-uma versão desatualizada. Uma restrição de unicidade sobre o par formado
-pela cadeia e pelo \textit{hash} anterior reforça a prevenção de bifurcações
-acidentais. A versão confirmada também pode identificar o limite de leitura
-e compor a chave de cache, desde que esses mecanismos utilizem a mesma
-definição de versão.
-
-\subsection{Norma de preenchimento}
-
-A flexibilidade do registro permite acomodar diferenças entre aeródromos,
-mas não determina quais informações são necessárias para validar os dados
-ou calcular os derivados. Propõe-se, por isso, uma norma de preenchimento
-organizada em três camadas:
-\begin{itemize}
-    \item uma camada obrigatória, validada na escrita, que define os tipos
-    dos elementos, as unidades, a origem dos valores e os requisitos
-    mínimos para o cálculo dos derivados;
-    \item uma camada recomendada, baseada no catálogo de dados aeronáuticos
-    do PANS-AIM~\cite{icao2018pansaim}, que padroniza nomes e unidades;
-    \item uma camada de extensão, identificada pelo prefixo \texttt{x\_},
-    destinada a campos específicos. Campos recorrentes podem ser
-    incorporados à camada recomendada em versões posteriores da norma.
-\end{itemize}
-
-A norma distingue três estados de ausência: ``não informado'',
-``não se aplica'' e ``desconhecido''. Essa distinção impede que a falta
-de uma premissa seja interpretada automaticamente como zero. A biblioteca
-já a aplica às premissas das distâncias declaradas (Seção~\ref{sec:derivados}):
-a falta do deslocamento de uma cabeceira leva à recusa da LDA. A norma a
-estenderia aos demais campos e acrescentaria o estado ``desconhecido''.
-
-A norma é versionada para que cada evento possa ser interpretado segundo
-as regras aplicáveis, sem reescrever o histórico. Assim, a estrutura do
-registro preserva as afirmações originais, enquanto a interpretação
-padronizada pode evoluir de forma reproduzível.
-
-\subsection{Transporte e escala}
-
-Para o volume de dados de um único aeródromo, o próprio banco pode atender
-à distribuição dos eventos. Em cenários de maior escala, um sistema de
-mensageria, como o Kafka~\cite{kreps2011kafka}, pode desacoplar a escrita
-do consumo e distribuir os eventos entre diferentes leitores. A adoção
-desse mecanismo, entretanto, não elimina a necessidade de verificar a
-integridade e a continuidade da cadeia.
-
-Duas estratégias podem reduzir o volume transmitido. Na primeira, o tópico
-transporta apenas os envelopes dos eventos, e o consumidor busca no registro
-os corpos necessários ao seu recorte, conferindo cada um contra o
-\textit{hash} declarado. Essa abordagem reduz o tráfego, mas mantém a
-dependência de acesso ao registro.
-
-Na segunda, tópicos derivados distribuem eventos por \textit{feature} ou
-por aeródromo, permitindo segmentar o fluxo conforme as necessidades de
-cada consumidor. Como esses tópicos podem omitir eventos da cadeia original,
-a verificação exige informações suficientes para detectar lacunas e
-confirmar a ligação dos eventos recebidos ao histórico de origem.
-
-\subsection{Consulta}
-
-A distribuição define como os eventos chegam ao consumidor; a consulta
-define como o estado reconstruído pode ser interrogado. Uma possibilidade
-é utilizar GraphQL sobre a projeção local do consumidor. Nesse modelo,
-a consulta especifica o limite de leitura, seleciona o fecho de dependências
-e acessa as relações declaradas e os derivados calculados segundo a regra
-aplicável.
-
-Outra possibilidade é empregar uma linguagem de consulta lógica, como
-Datalog, utilizada pelo Datomic~\cite{cognitect2026}. A escolha da linguagem
-determina como as perguntas são expressas, mas não altera a origem dos
-dados nem as regras de reconstrução do estado. Os resultados continuam
-condicionados ao histórico verificado, ao recorte selecionado, ao limite
-de leitura e à regra de cálculo utilizada.
-
-\subsection{Dois eixos de tempo}
-
-Uma extensão bitemporal, conforme discutido na
-Seção~\ref{sec:bitemporal}, permitiria distinguir o tempo de transação,
-controlado pelo sistema, do tempo de validade, declarado em cada afirmação.
-Com isso, seria possível consultar tanto o estado conhecido pelo sistema
-em determinado instante quanto o estado correspondente a um período de
-validade específico.
-
-Essa extensão também afeta a estratégia de consulta. Enquanto o tempo de
-transação permite percorrer o histórico em ordem, as consultas por intervalos
-de validade podem se beneficiar de índices especializados, como um índice
-GiST sobre \texttt{tstzrange} no PostgreSQL. Quando o fim de um intervalo
-puder ser inferido de afirmações posteriores, ele poderá ser calculado
-durante a leitura, sem alterar afirmações anteriores.
-
-\subsection{Âncora e prova de inclusão}
-
-Para permitir a verificação independente do histórico, propõe-se publicar
-o \textit{hash} da cabeça da cadeia a cada emenda AIRAC ou depositá-lo,
-junto com o banco extraído, em um repositório com histórico verificável.
-A comparação com uma referência obtida por um canal independente permitiria
-detectar alterações posteriores ao estado ancorado, desde que a referência
-publicada não pudesse ser substituída silenciosamente.
-
-A âncora só vale tanto quanto a separação entre quem a publica e quem
-controla o registro. Propõe-se que o órgão responsável pela publicação a
-emita junto com cada emenda, pelo mesmo canal oficial da AIP, e que qualquer
-recebedor possa compará-la com a cabeça do registro ou do banco extraído que
-recebeu. Uma âncora não é substituída: uma nova emenda publica uma nova
-cabeça, e as anteriores permanecem acessíveis, de modo que a cadeia de uma
-emenda deve conter, como prefixo, a da emenda anterior. Se o mesmo agente
-controlar o registro e o canal da âncora, a garantia se reduz à confiança
-nesse agente, e a reescrita completa volta a ser indetectável.
-
-Quando for necessário comprovar a inclusão de um evento sem compartilhar
-todo o registro, uma árvore de Merkle poderá fornecer uma prova compacta
-de pertencimento a um conjunto comprometido. Essa estratégia seria útil,
-por exemplo, no compartilhamento seletivo de dados operacionais entre
-empresas. A prova demonstraria a inclusão do evento no conjunto
-correspondente, mas não garantiria a veracidade de seu conteúdo.
-
-\section{Limites conhecidos}\label{sec:limites-arq}
-
-As limitações a seguir dizem respeito às garantias da arquitetura
-apresentada. Restrições específicas do protótipo, como funcionalidades
-não implementadas e limitações de desempenho, são discutidas na
-Seção~\ref{sec:implementacao}.
-
-\begin{itemize}
-    \item \textbf{Autoria:} o campo \texttt{asserted\_by} identifica o autor
-    por texto, mas não comprova sua identidade, pois a arquitetura não exige
-    assinatura digital.
-
-    \item \textbf{Integridade sem âncora externa:} a cadeia de
-    \textit{hashes} permite verificar a consistência interna do histórico,
-    mas não impede que alguém com controle sobre todo o registro o
-    reescreva. Sem uma referência independente, também não é possível
-    confirmar se o histórico recebido corresponde ao anteriormente
-    publicado.
-
-    \item \textbf{Interpretação dos dados:} as premissas das distâncias
-    declaradas têm declaração obrigatória, e a sua falta leva à recusa. Nos
-    demais campos, sem uma norma de preenchimento, a ausência de um campo
-    pode ser confundida com um valor válido, como zero, e a distinção entre
-    ausência, inaplicabilidade e desconhecimento depende da adoção de
-    convenções explícitas.
-
-    \item \textbf{Confidencialidade:} o tópico geral expõe os eventos nele
-    publicados aos seus consumidores. O isolamento de dados restritos exige
-    mecanismos adicionais, como fluxos separados e controles de acesso.
-    A publicação de \textit{hashes}, isoladamente, não garante
-    confidencialidade.
-
-    \item \textbf{Escopo temporal e espacial:} cada cadeia representa um
-    único aeródromo, e a ordenação de eventos entre aeródromos distintos
-    não é definida. Além disso, o modelo atual utiliza apenas o tempo de
-    transação; consultas pelo tempo de validade exigem uma extensão
-    bitemporal.
-
-    \item \textbf{Banco extraído:} o arquivo preserva o histórico registrado,
-    mas não inclui necessariamente os derivados nem impede modificações
-    diretas. Sua integridade depende de verificações realizadas sobre o
-    conteúdo e de uma referência confiável para comparação.
-
-    \item \textbf{Veracidade:} a integridade do histórico não garante que
-    as medições estejam corretas. A arquitetura permite rastrear quem
-    afirmou um valor, quando a afirmação foi registrada e de quais dados
-    ela depende, mas a validação factual exige fontes e procedimentos
-    externos.
-\end{itemize}
+\paragraph*{E6.} O registro é retransmitido para o tópico. Um consumidor é comparado com o banco em cada fronteira de corte e em três instantes. Banco, consumidor e primitiva SQL de estado são consultados com um limite no meio da carga. Um consumidor que assina só a cabeceira~16 é comparado com o que lê tudo. Uma restrição nova é consultada antes e depois de recebida e com o banco fechado. Seis consumidores, que leem o tópico de formas diferentes, são comparados no mesmo limite: de uma vez, um a um, em lotes de dois, por agendamento, com queda e retomada, e a partir de um tópico refeito do zero. Por fim, o canal é atacado de seis formas, com alvo na mensagem da troca de referencial, sem tocar o banco.
