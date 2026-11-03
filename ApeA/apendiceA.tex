@@ -16,6 +16,7 @@ Este apêndice lista as verificações que decidem a aprovação de cada experim
     E1 & O evento que registra a edição de 2026 não traz causa. \\
     \midrule
     E2 & Cada grandeza calculada difere da publicada dentro da sua margem: 0,919~m para o comprimento e as distâncias declaradas, 1,419~m para a ASDA~16, 0,014$^\circ$ para os azimutes e 1,009$^\circ$ para os rumos magnéticos. \\
+    E2 & Nenhuma distância declarada é recusada: as duas direções declaram o deslocamento e a presença de zona de parada e de zona livre de obstáculos. \\
     E2 & Nenhum valor derivado está gravado no banco. \\
     E2 & A remedição grava exatamente dois eventos, o \texttt{BASELINE} do levantamento e o \texttt{DELTA} do aeródromo, e este altera apenas o identificador do referencial. \\
     E2 & A troca de referencial tem o levantamento como causa. \\
@@ -38,7 +39,7 @@ Este apêndice lista as verificações que decidem a aprovação de cada experim
     E5 & No arquivo alterado, o verificador aponta o evento cuja largura foi modificada. \\
     \midrule
     E6 & Em todas as fronteiras de corte e nos três instantes testados, o consumidor apresenta os mesmos estados e as mesmas distâncias que o banco. \\
-    E6 & O banco, cortado no meio da carga, informa a ASDA~16 igual à TORA~16, e nenhum corte do consumidor cai dentro da carga. \\
+    E6 & Cortados no meio da carga, o banco e o consumidor recuam para antes dela e respondem o mesmo, sem referencial vigente; a primitiva SQL vê a pista no mesmo ponto, e a regra, sobre esse estado parcial, recusa a ASDA~16 em vez de igualá-la à TORA~16. \\
     E6 & O consumidor que assina apenas a cabeceira~16 aplica um fecho menor e chega aos mesmos estados e ao mesmo \textit{hash} dos derivados. \\
     E6 & Antes de receber a restrição nova, o consumidor recusa a leitura; depois, responde incluindo-a, e a resposta não muda com o banco fechado. \\
     E6 & Os seis consumidores chegam ao mesmo \textit{hash} no mesmo limite. \\

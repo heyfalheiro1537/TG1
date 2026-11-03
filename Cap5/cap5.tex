@@ -30,7 +30,7 @@ A resposta à pergunta do E1 é, portanto, negativa. O modelo que guarda o valor
 
 \section{E2: derivação}\label{sec:res-e2}
 
-Todos os valores calculados a partir das premissas ficam dentro da margem definida para cada grandeza (Tabela~\ref{tab:res-e2}), e nenhum campo de valor derivado está guardado no banco. A diferença de 0,342~m em todas as distâncias declaradas é a mesma do comprimento, como prevê a Equação~\ref{eq:distancias-declaradas}.
+Todos os valores calculados a partir das premissas ficam dentro da margem definida para cada grandeza (Tabela~\ref{tab:res-e2}), e nenhum campo de valor derivado está guardado no banco. A diferença de 0,342~m em todas as distâncias declaradas é a mesma do comprimento, como prevê a Equação~\ref{eq:distancias-declaradas}. Nenhuma distância foi recusada, porque as duas direções declaram o deslocamento e a presença de zona de parada e de zona livre de obstáculos. Como essas declarações vêm da própria AD~2.13 (Seção~\ref{sec:aplicacao-sbsj}), a concordância da TODA e da LDA confere a regra de cálculo e o comprimento, mas não o deslocamento nem a zona livre de obstáculos.
 
 \begin{table}[htbp]
     \centering
@@ -108,7 +108,7 @@ Os resultados do E6 são apresentados por propriedade, na ordem da Seção~\ref{
 
 \paragraph*{Equivalência.} O tópico recebeu, inicialmente, os nove eventos escritos até o E5, em onze mensagens, contando os corpos dos dois referenciais. O décimo evento é a restrição escrita durante o próprio E6. Em todas as fronteiras de corte e nos três instantes testados, o consumidor apresenta os mesmos estados e as mesmas distâncias que o banco.
 
-\paragraph*{Atomicidade.} O banco aceita como limite qualquer evento, inclusive um situado no meio da carga. Cortado logo após a pista e antes da zona de parada, ele informa uma ASDA~16 igual à TORA~16, de 2675,342~m, sem acusar nenhuma anomalia, quando o valor correto é de 2958,342~m. O consumidor, consultado no mesmo ponto, recua o corte para antes da carga. Responde, então, sem nenhuma \textit{feature} e recusa os derivados por falta de referencial. Nenhum corte do consumidor cai dentro da carga.
+\paragraph*{Atomicidade.} Consultados com um limite logo após a pista e antes das cabeceiras e da zona de parada, o banco e o consumidor recuam o corte para antes da carga. Os dois respondem sem nenhuma \textit{feature} e recusam os derivados por falta de referencial, e nenhum corte cai dentro da carga. Só a primitiva SQL de estado, que não conhece grupos, vê a pista no mesmo ponto, com os seus 14 campos. Aplicada a esse estado parcial, a regra das distâncias informa a TORA~16, de 2675,342~m, e recusa a TODA, a ASDA e a LDA, porque as cabeceiras ainda não estão registradas. Na versão anterior da biblioteca, em que a leitura do banco aceitava qualquer limite e a ausência era lida como zero, o mesmo corte informava uma ASDA~16 igual à TORA~16, sem acusar anomalia, quando o valor correto é de 2958,342~m.
 
 \paragraph*{Recorte.} O consumidor que assina apenas a cabeceira~16 aplica o fecho de cinco \textit{features}, em vez de seis, e deixa de fora apenas o levantamento. Os estados das \textit{features} do recorte e o \textit{hash} dos derivados coincidem com os do consumidor que lê tudo.
 
@@ -160,7 +160,7 @@ Os seis experimentos foram aprovados segundo os critérios definidos antes da ex
         Experimento & Resposta & O que fica de fora \\
         \midrule
         E1 Causa (contraste) & não; 12 campos mudam sem causa & -- \\
-        E2 Derivação & valores recalculados dentro da precisão da AIP; a remedição escreve apenas o levantamento e a troca de referencial & regra para barreira de contenção \\
+        E2 Derivação & valores recalculados dentro da precisão da AIP; a remedição escreve apenas o levantamento e a troca de referencial & regra para barreira de contenção; deslocamento e CWY lidos da AD~2.13, sem conferência independente \\
         E3 Reconstrução no tempo & qualquer instante reconstruído, com autor, motivo e causa & consulta pelo tempo do fato \\
         E4 Evidência de adulteração & alterações no meio da cadeia detectadas & reescrita completa, detectada apenas pela âncora \\
         E5 Consistência e verificação & produtos não divergem; terceiro verifica sem a biblioteca & autoria registrada, mas não comprovada \\
@@ -174,6 +174,6 @@ Os seis experimentos foram aprovados segundo os critérios definidos antes da ex
 
 O alcance dos resultados é restrito, em primeiro lugar, pelo escopo do estudo. A avaliação usa um único estudo de caso, com uma pista de um aeródromo, e a composição de várias pistas e de outros elementos do lado ar é argumentada, mas não medida. O cenário é também parcialmente simulado. As premissas e os valores de comparação são reais, mas a remedição e as restrições não ocorreram.
 
-Parte da arquitetura, além disso, não foi implementada. A biblioteca e o consumidor devolvem a cabeça da cadeia, mas a âncora foi guardada pelos próprios experimentos, e nenhum mecanismo a publica ou a compara automaticamente. Sem a norma de preenchimento, a falta de zona de parada, de zona livre de obstáculos ou de deslocamento de cabeceira resulta em zero, e não em recusa. A escrita serializada por bloqueio pessimista não foi testada com várias fontes escrevendo simultaneamente, e as alternativas propostas não foram implementadas. O tópico, mantido em memória, não permite avaliar o transporte real, o custo em escala, os tópicos derivados nem a confidencialidade.
+Parte da arquitetura, além disso, não foi implementada. A biblioteca e o consumidor devolvem a cabeça da cadeia, mas a âncora foi guardada pelos próprios experimentos, e nenhum mecanismo a publica ou a compara automaticamente. A recusa por premissa ausente cobre apenas as premissas das distâncias declaradas; para os demais campos, a norma de preenchimento não foi implementada. A escrita serializada por bloqueio pessimista não foi testada com várias fontes escrevendo simultaneamente, e as alternativas propostas não foram implementadas. O tópico, mantido em memória, não permite avaliar o transporte real, o custo em escala, os tópicos derivados nem a confidencialidade.
 
 Alguns aspectos, por fim, não foram medidos. O volume do estudo de caso é pequeno demais para conclusões sobre o custo de leitura. A interoperabilidade entre organizações não pode ser testada com um único publicador, e o E5 e o E6 mostram as condições para ela, e não a interoperabilidade em si. O motor de geometria não foi comparado com as cartas oficiais e não entra em nenhum resultado. O Capítulo~\ref{chap:discussao} discute o significado desses resultados e limites em relação à pergunta de pesquisa.
