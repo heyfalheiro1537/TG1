@@ -1,4 +1,4 @@
-Este capítulo descreve como o trabalho foi conduzido e como a proposta é avaliada. A Seção~\ref{sec:dsr} apresenta a abordagem de pesquisa. A Seção~\ref{sec:requisitos} define os requisitos que a solução deve atender, antes de qualquer escolha de arquitetura. A Seção~\ref{sec:caso} apresenta o estudo de caso e os dados utilizados, e a Seção~\ref{sec:experimentos}, os experimentos e os seus critérios de aprovação. As Seções~\ref{sec:validacao} e~\ref{sec:reprodutibilidade} tratam, por fim, de como a avaliação evita conferir a solução contra ela mesma e de como pode ser reproduzida.
+Este capítulo descreve como o trabalho foi conduzido e como a proposta é avaliada: a abordagem de pesquisa, os requisitos da solução, definidos antes de qualquer escolha de arquitetura, o estudo de caso e os experimentos.
 
 \section{Abordagem de pesquisa}\label{sec:dsr}
 
@@ -100,11 +100,11 @@ Os dados vêm de três publicações do DECEA:
     \item a Carta de Aeródromo, emenda AIRAC~2604 \cite{decea2026adc}.
 \end{itemize}
 
-Apenas as premissas entram no registro. Os valores que a AIP publica e que podem ser calculados, como o comprimento, os azimutes e as distâncias declaradas, ficam de fora e servem de gabarito. As duas cartas servem apenas ao contraste do Experimento 1, que será aprofundado na seção seguinte. A remedição da cabeceira~34 e as restrições temporárias são simuladas, pois não ocorreram no período estudado, e servem para exercitar o ciclo de vida dos elementos.
+Apenas as premissas entram no registro. Os valores que a AIP publica e que podem ser calculados, como o comprimento, os azimutes e as distâncias declaradas, ficam de fora e servem de gabarito. As duas cartas servem apenas à caracterização do Experimento 1, que será aprofundado na seção seguinte. A remedição da cabeceira~34 e as restrições temporárias são simuladas, pois não ocorreram no período estudado, e servem para exercitar o ciclo de vida dos elementos.
 
 \section{Experimentos}\label{sec:experimentos}
 
-São seis experimentos, cada um dedicado a uma propriedade da hipótese. O Experimento 1 é um contraste. Ele registra os dados na forma em que as publicações chegam ao usuário e verifica o que esse registro permite responder. Os demais usam a arquitetura proposta. A Tabela~\ref{tab:experimentos} apresenta as perguntas e os critérios de aprovação, e a Seção~\ref{sec:procedimentos} descreve como cada experimento é executado.
+São seis experimentos, cada um dedicado a uma propriedade da hipótese. O Experimento 1 é uma caracterização, e não um teste da arquitetura. Ele registra os dados na forma em que as publicações chegam ao usuário e verifica o que esse registro permite responder. O seu resultado esperado é negativo, e a sua função é documentar com dados reais a lacuna descrita no Capítulo~\ref{chap:introducao}. Os outros cinco usam a arquitetura proposta e são os que poderiam refutá-la. A Tabela~\ref{tab:experimentos} apresenta as perguntas e os critérios de aprovação, e a Seção~\ref{sec:procedimentos} descreve como cada experimento é executado.
 
 
 % CONFERIR: citar os commits em que as verificações foram registradas antes da execução.
@@ -141,7 +141,7 @@ com o gabarito geodésico, adota-se a exatidão de $0{,}5~\mathrm{mm}$
 atribuída às fórmulas de Vincenty, conforme discutido na
 Seção~\ref{sec:geodesia}.
 
-As verificações foram registradas no histórico do repositório de experimentos antes da execução que produziu os resultados \cite{aeroledger_experimentos}. As de E1 a E6 estão no \textit{commit} \texttt{31ad703}, e a execução apresentada no Capítulo~\ref{chap:resultados} está no \textit{commit} seguinte, \texttt{7b58932}, que acrescenta apenas as saídas do \textit{notebook}, sem alterar o código. O histórico mostra a ordem entre o registro das verificações e a execução registrada, mas não exclui execuções locais anteriores. Por isso, a principal garantia contra o ajuste dos critérios aos resultados é a origem das margens, que vêm da precisão de publicação e da exatidão do gabarito, e não dos valores obtidos.
+As verificações foram registradas no histórico do repositório de experimentos antes da execução que produziu os resultados \cite{aeroledger_experimentos}. As de E1 a E6 estão no \textit{commit} \texttt{b62e230}, e a execução apresentada no Capítulo~\ref{chap:resultados} está no \textit{commit} seguinte, \texttt{6615723}, que acrescenta apenas as saídas do \textit{notebook}, sem alterar o código. Duas rodadas anteriores seguiram o mesmo protocolo. A primeira usou a versão 0.6.0 da biblioteca (\textit{commits} \texttt{31ad703} e \texttt{7b58932}). A segunda passou à versão 0.7.0, que recusa as distâncias declaradas cujas premissas não foram afirmadas e impede que a leitura do registro corte um grupo, com as verificações do E2 e do E6 ajustadas a isso antes da execução (\textit{commits} \texttt{b79b73c} e \texttt{1228f07}). A terceira apenas renomeou a cadeia do E1, sem mudar nenhuma verificação. O histórico mostra a ordem entre o registro das verificações e a execução registrada, mas não exclui execuções locais anteriores. Por isso, a principal garantia contra o ajuste dos critérios aos resultados é a origem das margens, que vêm da precisão de publicação e da exatidão do gabarito, e não dos valores obtidos.
 
 \begin{table}[htbp]
     \centering
@@ -152,7 +152,7 @@ As verificações foram registradas no histórico do repositório de experimento
         \toprule
         & Pergunta & Critério de aprovação \\
         \midrule
-        E1 & O modelo que guarda o valor publicado registra a causa das mudanças entre edições? & Contraste: nenhum campo alterado traz causa \\
+        E1 & O modelo que guarda o valor publicado registra a causa das mudanças entre edições? & Caracterização, sem refutar a arquitetura: nenhum campo alterado traz causa \\
         E2 & Os valores derivados reproduzem os publicados? A remedição de uma cabeceira obriga a reescrever outro dado? & Diferença dentro da margem de cada grandeza; a remedição grava apenas o levantamento e a troca de referencial; diferença ao gabarito geodésico abaixo de 0,5~mm \\
         E3 & O estado em qualquer instante é reconstruído, com autor, motivo e causa de cada mudança? & Estados esperados em todos os instantes consultados; derivados de um instante passado idênticos antes e depois da remedição \\
         E4 & Quais alterações feitas diretamente no banco são detectadas, e por qual mecanismo? & alterar, apagar e inserir eventos detectados pela cadeia; reescrita completa detectada pela âncora \\
@@ -172,4 +172,4 @@ Três referências externas são usadas. A primeira são os valores da AIP que n
 
 \section{Reprodutibilidade}\label{sec:reprodutibilidade}
 
-Os experimentos usam a biblioteca \texttt{aeroledger}, versão 0.6.0 (\textit{commit} \texttt{e93b718}) \cite{aeroledger}, e são executados por um \textit{notebook} mantido em repositório separado \cite{aeroledger_experimentos}. A separação garante que a biblioteca avaliada não contenha código escrito para o experimento. O banco extraído do SBSJ, gerado a partir do mesmo cenário, está publicado como conjunto de dados aberto \cite{aeroledger_dataset} e permite repetir parte da avaliação sem a biblioteca (Seção~\ref{sec:res-banco}).
+Os experimentos usam a biblioteca \texttt{aeroledger}, versão 0.7.0 (\textit{commit} \texttt{fe478ea}) \cite{aeroledger}, e são executados por um \textit{notebook} mantido em repositório separado \cite{aeroledger_experimentos}. A separação garante que a biblioteca avaliada não contenha código escrito para o experimento. O banco extraído do SBSJ, gerado a partir do mesmo cenário, está publicado como conjunto de dados aberto \cite{aeroledger_dataset} e permite repetir parte da avaliação sem a biblioteca (Seção~\ref{sec:res-banco}).

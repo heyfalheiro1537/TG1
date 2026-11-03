@@ -1,10 +1,8 @@
-O Capítulo~\ref{chap:metodologia} estabeleceu os requisitos que um serviço de dados auditável deve atender e o método pelo qual a solução é avaliada. Este capítulo desenvolve a solução e a aplica ao caso estudado.
-
-As Seções~\ref{sec:visao-geral} a~\ref{sec:banco-extraido} descrevem a arquitetura seguindo o caminho do dado. Primeiro, apresentam o que se guarda, isto é, o evento, o tempo e o referencial. Em seguida, mostram como se escreve e como se lê, como a leitura chega aos consumidores, como um terceiro confere o que recebeu e como o registro é entregue em um arquivo. A Seção~\ref{sec:implementacao} descreve a implementação, e a Seção~\ref{sec:aplicacao-sbsj}, a sua aplicação à pista do SBSJ. As Seções~\ref{sec:extensoes} e~\ref{sec:limites-arq} reúnem, respectivamente, o que foi desenhado sem ser avaliado e os limites conhecidos da arquitetura.
+Este capítulo desenvolve a solução para os requisitos do Capítulo~\ref{chap:metodologia}, seguindo o caminho do dado: o que se guarda, como se escreve e se lê, como a leitura chega aos consumidores e a terceiros. Em seguida, descreve a implementação (Seção~\ref{sec:implementacao}) e a sua aplicação ao SBSJ (Seção~\ref{sec:aplicacao-sbsj}).
 
 \section{Visão geral}\label{sec:visao-geral}
 
-A arquitetura parte de uma ideia central. O dado primário não é o estado do aeródromo, mas a sequência de afirmações feitas sobre ele, e o estado em qualquer instante é calculado a partir dessa sequência. Essa organização corresponde ao padrão \textit{event sourcing} (Seção~\ref{sec:event-sourcing}), onde cada alteração é gravada como um evento, e os eventos nunca são alterados. O estado, então, resulta da composição dos eventos até o instante pedido.
+A arquitetura parte de uma ideia central. O dado primário não é o estado do aeródromo, mas a sequência de afirmações feitas sobre ele, e o estado em qualquer instante é calculado a partir dessa sequência. Essa organização corresponde ao padrão \textit{event sourcing} (Seção~\ref{sec:event-sourcing}), onde cada alteração é gravada como um evento, e os eventos nunca são alterados. O estado, então, resulta da composição dos eventos até o instante pedido. A imutabilidade, neste trabalho, é uma regra da escrita, e não uma impossibilidade física: a biblioteca não oferece atualização nem exclusão, e o banco as recusa por gatilhos, mas quem administra o banco pode contorná-los. O que a arquitetura assegura é que uma alteração feita assim deixa evidência verificável, nos termos e com os limites da Seção~\ref{sec:verificacao}.
 
 A essa ideia soma-se a separação entre escrita e leitura (CQRS). Do lado da escrita, um único ponto de entrada valida e grava os eventos, e o que ele grava é a única fonte de verdade. Do lado da leitura, cada produto é um modelo de leitura montado a partir dos mesmos eventos, como, por exemplo, o conteúdo de uma carta ou uma tabela de distâncias declaradas. Os modelos de leitura podem ser vários, podem mudar e podem ser apagados e reconstruídos, pois não guardam nada que não esteja nos eventos.
 
@@ -146,13 +144,13 @@ O significado desses tipos é mais simples que no AIXM, pois não há distinçã
 
 Algumas mudanças exigem mais de um evento. A carga de uma edição do AIP, por exemplo, cria de uma só vez o aeródromo, a pista, as cabeceiras e a zona de parada. Uma leitura feita no meio dessa carga mostraria a pista sem a zona de parada e calcularia uma ASDA igual à TORA, sem nenhum erro aparente. Para evitar esse estado intermediário, a arquitetura define o grupo, um conjunto de dois ou mais eventos gravados juntos, ou todos ou nenhum, contíguos no registro e no mesmo instante.
 
-Cada evento do grupo leva no envelope o \texttt{grupo\_id}, que é o identificador do primeiro evento, e o \texttt{grupo\_n}, que é o número de eventos do grupo. O primeiro campo registra quais eventos formam uma mesma mudança, o que o instante comum, por si só, não garante. O segundo permite a quem lê saber se já recebeu o grupo inteiro. Uma leitura cujo limite caia dentro de um grupo recua até antes dele, de modo que nenhum corte mostra uma mudança pela metade (Seção~\ref{sec:distribuicao}).
+Cada evento do grupo leva no envelope o \texttt{grupo\_id}, que é o identificador do primeiro evento, e o \texttt{grupo\_n}, que é o número de eventos do grupo. O primeiro campo registra quais eventos formam uma mesma mudança, o que o instante comum, por si só, não garante. O segundo permite a quem lê saber se já recebeu o grupo inteiro. Uma leitura cujo limite caia dentro de um grupo recua até antes dele, de modo que nenhum corte mostra uma mudança pela metade, seja na leitura do registro, seja no consumidor (Seção~\ref{sec:distribuicao}).
 
-O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, no qual as partidas de uma transferência entram juntas e o livro nunca mostra o débito sem o crédito. Há, contudo, uma diferença. Na contabilidade, as partidas de um lançamento somam zero, e uma transferência incompleta se denuncia sozinha. Aqui não há lei de conservação, e uma pista sem zona de parada é um estado plausível. A atomicidade, por isso, não pode depender de uma conferência posterior.
+O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, que nunca mostra o débito sem o crédito. Como aqui não há lei de conservação que denuncie uma mudança incompleta (Seção~\ref{sec:disc-analogia}), a atomicidade não pode depender de uma conferência posterior.
 
 \section{Tempo}\label{sec:tempo}
 
-A arquitetura usa uma única linha do tempo, o tempo de transação, isto é, o instante em que cada evento foi registrado (Seção~\ref{sec:bitemporal}). Os motivos dessa escolha estão na Seção~\ref{sec:req-tempo}. Cada aeródromo tem a sua cadeia de eventos, e cada cadeia tem um relógio que só avança, de modo que nada se escreve no passado. A Figura~\ref{fig:linha-tempo} ilustra a linha do tempo de duas \textit{features}.
+A arquitetura usa uma única linha do tempo, o tempo de transação, isto é, o instante em que cada evento foi registrado (Seção~\ref{sec:bitemporal}). Os motivos dessa escolha estão na Seção~\ref{sec:req-tempo}. Cada aeródromo tem a sua cadeia de eventos, e cada cadeia tem um relógio que só avança, de modo que nada se escreve no passado. Nos experimentos, esse relógio é de simulação: começa na data de efetividade da edição carregada e é avançado pelo próprio cenário, como nos trinta dias entre a carga e a remedição. Ele preserva a propriedade que importa, a de nunca andar para trás, mas não é o relógio do computador, que seria o usado em operação. A Figura~\ref{fig:linha-tempo} ilustra a linha do tempo de duas \textit{features}.
 
 \begin{figure}[h]
     \centering
@@ -187,13 +185,13 @@ O identificador do evento (\texttt{event\_id}) segue o esquema Snowflake \cite{t
 
 Na leitura, o instante $t$ pode ser uma data e hora ou um \texttt{event\_id}, e ambos são convertidos em um limite superior de identificador. Uma data e hora corresponde ao maior identificador possível naquele milissegundo, e um \texttt{event\_id} distingue eventos do mesmo milissegundo, como os de um grupo. Toda consulta se reduz, assim, a ``tudo até o evento $N$''.
 
-A extensão para dois eixos de tempo está entre as propostas da Seção~\ref{sec:extensoes}, no qual uma data alegada por quem escreve, como a data de uma medição ou a entrada em vigor de uma emenda AIRAC, é conteúdo do corpo. 
+Uma data alegada por quem escreve, como a de uma medição ou a entrada em vigor de uma emenda AIRAC, é conteúdo do corpo, e não eixo de tempo; a extensão para dois eixos fica como trabalho futuro (Seção~\ref{sec:trabalhos-futuros}). 
 
 \section{Referencial e posição}\label{sec:referencial}
 
 \subsection{O referencial}
 
-O requisito de posição relativa (Seção~\ref{sec:req-posicao}) é atendido por um referencial, documento que declara os referentes, isto é, os pontos medidos em que as posições se apoiam, e os elementos lineares entre eles. No SBSJ, o referencial tem dois referentes georreferenciados, as cabeceiras THR16 e THR34, e um elemento linear entre elas, RWY\_16\_34. Cada referente tem latitude, longitude, elevação, ondulação geoidal e fonte, e o datum é o SIRGAS2000. A Figura~\ref{fig:referencial-sbsj} mostra esse referencial.
+O requisito de posição relativa (Seção~\ref{sec:req-posicao}) é atendido por um referencial, documento que declara os referentes, isto é, os pontos medidos em que as posições se apoiam, e os elementos lineares entre eles. No SBSJ, o referencial tem dois referentes georreferenciados, as cabeceiras THR16 e THR34, e um elemento linear entre elas, RWY\_16\_34. Em geral, as pontas do elemento linear são as extremidades da pista, e uma cabeceira deslocada é uma posição sobre ele, a uma distância $d$ da extremidade. No SBSJ, as duas direções declaram deslocamento nulo (Seção~\ref{sec:aplicacao-sbsj}), e as extremidades coincidem com as cabeceiras publicadas na AD~2.12. Cada referente tem latitude, longitude, elevação, ondulação geoidal e fonte, e o datum é o SIRGAS2000. A Figura~\ref{fig:referencial-sbsj} mostra esse referencial.
 
 \begin{figure}[htbp]
     \centering
@@ -353,7 +351,7 @@ Cada evento guarda o \textit{hash} do evento anterior na mesma cadeia e o seu pr
     h_i = \mathrm{SHA\text{-}256}\big(\mathrm{JCS}(\mathit{env}_i,\, h_{i-1},\, C_i)\big)
     \label{eq:hash}
 \end{equation}
-em que $\mathit{env}_i$ é o envelope completo do evento, incluindo o identificador, o autor, o motivo, a causa e, quando houver, os campos do grupo. O termo $h_{i-1}$ é o \textit{hash} do evento anterior, e $C_i$ é a lista de campos do corpo, ordenada pelo caminho. JCS é a forma canônica de JSON definida na RFC~8785 \cite{rfc8785}, que fixa a ordem das chaves, a ausência de espaços e a representação dos números. Os campos do grupo só entram quando presentes, de modo que um evento fora de grupo não carrega campos vazios no \textit{hash}.
+em que $\mathit{env}_i$ é o envelope completo do evento, incluindo o identificador, o autor, o motivo, a causa e, quando houver, os campos do grupo. O termo $h_{i-1}$ é o \textit{hash} do evento anterior, e $C_i$ é a lista de campos do corpo, ordenada pelo caminho. JCS é a forma canônica de JSON definida na RFC~8785 \cite{rfc8785}, que fixa a ordem das chaves, a ausência de espaços e a representação dos números. Os campos do grupo só entram quando presentes, de modo que um evento fora de grupo não carrega campos vazios no \textit{hash}. Concretamente, o conteúdo submetido ao JCS é um único objeto JSON com os campos do envelope (\texttt{event\_id}, \texttt{run\_id}, \texttt{feature\_id}, \texttt{feature\_type}, \texttt{event\_type}, \texttt{asserted\_by}, \texttt{owner\_ref}, \texttt{reason}, \texttt{caused\_by} e, quando houver, \texttt{grupo\_id} e \texttt{grupo\_n}), o campo \texttt{prev\_hash} e o campo \texttt{campos}, que é a lista dos campos do corpo, cada um como um objeto com \texttt{path}, \texttt{op} e \texttt{next}. Os campos do envelope sem valor entram como nulos, e o \texttt{prev\_hash} do primeiro evento de uma cadeia é nulo. O \textit{hash} é o SHA-256 dos \textit{bytes} UTF-8 dessa forma canônica, escrito em hexadecimal minúsculo. Como o identificador da cadeia (\texttt{run\_id}) entra no \textit{hash}, um evento não pode ser transplantado de uma cadeia para outra sem quebrá-la.
 
 A forma canônica é o que permite a um terceiro refazer o cálculo em outra linguagem e chegar ao mesmo resultado. Sem ela, o mesmo conteúdo admitiria várias serializações, com \textit{hashes} diferentes. Como a causa, o autor e o grupo entram no \textit{hash}, trocar a causa de um evento ou retirá-lo de um grupo quebra a cadeia da mesma forma que trocar qualquer valor.
 
@@ -361,7 +359,7 @@ O referencial fica fora da cadeia, guardado à parte, mas está protegido de for
 
 \subsection{Serialização}
 
-A escrita é serializada por cadeia, com um único ponto de ordenação por aeródromo. Com isso, a ordem dos eventos, a dos identificadores e a da cadeia coincidem sem nenhum cuidado adicional, e um grupo é contíguo por construção. Para o volume de um aeródromo, com poucas escritas por ciclo AIRAC, essa solução é suficiente, assim, a escrita privilegia a consistência. O ponto de ordenação pode ficar indisponível por algum tempo, mas nunca grava fora de ordem. As formas de receber escritas de várias fontes simultaneamente estão entre as propostas da Seção~\ref{sec:extensoes}.
+A escrita é serializada por cadeia, com um único ponto de ordenação por aeródromo. Com isso, a ordem dos eventos, a dos identificadores e a da cadeia coincidem sem nenhum cuidado adicional, e um grupo é contíguo por construção. Para o volume de um aeródromo, com poucas escritas por ciclo AIRAC, essa solução deve ser suficiente, embora o seu custo não tenha sido medido, e a escrita privilegia a consistência. O ponto de ordenação pode ficar indisponível por algum tempo, mas nunca grava fora de ordem. As formas de receber escritas de várias fontes simultaneamente estão entre as propostas da Seção~\ref{sec:trabalhos-futuros}.
 
 \section{A leitura no registro}\label{sec:leitura}
 
@@ -387,13 +385,13 @@ O requisito do mínimo de informação (Seção~\ref{sec:req-minimo}) é atendid
     \end{aligned}
     \label{eq:distancias-declaradas}
 \end{equation}
-em que $L$ é o comprimento da pista, CWY e SWY são os comprimentos da zona livre de obstáculos e da zona de parada aplicáveis àquela direção, também calculados a partir das \textit{seeds}, e $d$ é o deslocamento da cabeceira, registrado como premissa da direção.
+em que $L$ é o comprimento da pista entre as suas extremidades, CWY e SWY são os comprimentos da zona livre de obstáculos e da zona de parada aplicáveis àquela direção, também calculados a partir das \textit{seeds}, e $d$ é o deslocamento da cabeceira, registrado como premissa da direção.
 
-O cálculo é recusado, em vez de estimado, quando falta uma premissa estrutural. Sem referencial vigente, não há derivado, e uma \textit{seed} incompleta já é recusada na escrita. Pela mesma razão, um caso para o qual não há regra definida, como uma pista com barreira de contenção, leva à recusa, e não a um número possivelmente errado. Sem a norma de preenchimento proposta na Seção~\ref{sec:extensoes}, porém, o registro não distingue ``não se aplica'' de ``não informado''. A ausência de uma zona de parada, de uma zona livre de obstáculos ou de um deslocamento é lida como zero.
+O cálculo é recusado, em vez de estimado, quando falta uma premissa estrutural. Sem referencial vigente, não há derivado, e uma \textit{seed} incompleta já é recusada na escrita. Pela mesma razão, um caso para o qual não há regra definida, como uma pista com barreira de contenção, leva à recusa, e não a um número possivelmente errado. Pela mesma razão, a ausência de uma premissa não é lida como zero. Cada direção de pista declara o deslocamento da sua cabeceira, com zero permitido, e se há zona de parada e zona livre de obstáculos para a decolagem nessa direção. Sem a declaração, o valor que depende dela é recusado. Uma declaração que contradiz as \textit{features} registradas, como uma zona de parada declarada e não registrada, também é recusada. A recusa é feita por valor, de modo que a TORA de uma direção continua calculada mesmo quando a sua LDA é recusada. Essas declarações distinguem ``não se aplica'', afirmado como zero ou como ausência declarada, de ``não informado''. A distinção entre ``não informado'' e ``desconhecido'' e a sua extensão aos demais campos dependem da norma de preenchimento proposta na Seção~\ref{sec:trabalhos-futuros}.
 
 \subsection{Modelos de leitura e caches}
 
-Cópias podem acelerar a leitura sem se tornar fonte de verdade. Uma delas é o estado de uma \textit{feature} ao fim de um evento, a partir do qual se aplicam apenas os eventos posteriores. Outra é o resultado de uma seleção por tipos e camadas em $t$, identificado por uma marca d'água, que é o maior \texttt{event\_id} até $t$ entre os eventos dos tipos selecionados. Um evento fora da seleção não move a marca e não invalida a cópia. Essas cópias podem ser apagadas a qualquer momento, e nenhuma escrita as lê. Um valor derivado pode, assim, ser guardado para acelerar a leitura, desde que essa cópia nunca sirva de premissa para outro cálculo.
+Cópias podem acelerar a leitura sem se tornar fonte de verdade, como o estado de uma \textit{feature} ao fim de um evento ou o resultado de uma seleção por tipos e camadas, identificado pelo maior \texttt{event\_id} dos tipos selecionados. Elas podem ser apagadas a qualquer momento, nenhuma escrita as lê, e um valor derivado guardado nelas nunca serve de premissa para outro cálculo. O seu efeito sobre o custo de leitura não foi avaliado.
 
 A lente da carta de aeródromo é um exemplo de modelo de leitura. Ela monta o conteúdo de uma ADC em $t$ lendo apenas as camadas \texttt{adc} e \texttt{geometria} dos tipos que a carta mostra. Tudo o mais que o registro guarda, como os levantamentos, fica de fora sem ser lido. A tabela de distâncias da lente resulta da mesma regra da Equação~\ref{eq:distancias-declaradas}, sobre o mesmo referencial vigente. É dessa forma que se atende ao requisito de consistência entre produtos (Seção~\ref{sec:req-consistencia}). A carta e a tabela não guardam valores próprios, e duas leituras para o mesmo instante partem das mesmas afirmações.
 
@@ -404,7 +402,7 @@ Se todo produto for lido diretamente do banco, o banco passa a ser um ponto úni
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{Figures/fig_arquitetura_pubsub.pdf}
-    \caption{Distribuição da leitura. O registro é publicado em ordem em um tópico geral, e cada consumidor monta a sua projeção. Tudo à direita do registro é derivado e pode ser reconstruído a partir dele. A fila de escrita e a réplica síncrona, à esquerda, são extensões propostas (Seção~\ref{sec:extensoes}).}
+    \caption{Distribuição da leitura. O registro é publicado em ordem em um tópico geral, e cada consumidor monta a sua projeção. Tudo à direita do registro é derivado e pode ser reconstruído a partir dele. A fila de escrita e a réplica síncrona, à esquerda, são extensões propostas (Seção~\ref{sec:trabalhos-futuros}).}
     \label{fig:distribuicao}
     \par\smallskip{\small Fonte: o autor.}
 \end{figure}
@@ -462,7 +460,23 @@ Três regras preservam os requisitos da Seção~\ref{sec:requisitos} nesse cená
 
 A segunda regra é a do limite explícito. Toda leitura declara até onde vai, como \texttt{event\_id} ou como instante, e não existe leitura ``do mais recente''. Se o limite ultrapassa o que o consumidor já recebeu, ele recusa a leitura em vez de responder com um estado desatualizado.
 
-A terceira regra é a da regra identificada. Como cada consumidor calcula os seus próprios derivados, a consistência entre produtos passa a depender de que todos apliquem a mesma regra. A regra é identificada pelo \textit{hash} do código que deriva os valores, e a resposta a declara.
+A terceira regra é a da regra identificada. Como cada consumidor calcula os seus próprios derivados, a consistência entre produtos passa a depender de que todos apliquem a mesma regra. A regra é identificada pelo \textit{hash} do código que deriva os valores, e a resposta a declara. A identificação, porém, não garante a reprodução. O \textit{hash} aponta uma versão, mas reproduzir um resultado antigo exige que o código dessa versão continue disponível e executável, e saber se ele correspondia à norma vigente no instante consultado é outra verificação. Na implementação, o \textit{hash} é o do módulo de derivações inteiro, e a disponibilidade depende de a versão estar fixada no repositório da biblioteca. A Tabela~\ref{tab:versoes-regra} lista as versões da regra usadas neste trabalho.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Versões da regra de derivação usadas neste trabalho.}
+    \label{tab:versoes-regra}
+    \small
+    \begin{tabularx}{\linewidth}{l l l X}
+        \toprule
+        Versão & \textit{Commit} & \textit{Hash} da regra & O que muda \\
+        \midrule
+        0.6.0 & \texttt{e93b718} & \texttt{6a99f0bec22e}\ldots & ausência de deslocamento, de zona de parada ou de zona livre de obstáculos lida como zero \\
+        0.7.0 & \texttt{fe478ea} & \texttt{daa2146826f7}\ldots & premissas das direções declaradas; recusa por valor quando faltam ou contradizem as \textit{features} \\
+        \bottomrule
+    \end{tabularx}
+    \par\smallskip{\small Fonte: o autor.}
+\end{table}
 
 \subsection{O recorte de cada consumidor}
 
@@ -513,11 +527,13 @@ A mesma verificação aparece em três pontos da arquitetura. O registro verific
 
 O encadeamento denuncia qualquer alteração que deixe um sucessor. Alterar, apagar ou inserir um evento no meio do registro, ou uma mensagem no meio do tópico, quebra a cadeia a partir daquele ponto, mesmo que o atacante recalcule o \textit{hash} do evento alterado. Há, porém, alterações que não deixam sucessor para denunciá-las. No banco, é o caso de modificar apenas o último evento, truncar o final ou reescrever a cadeia inteira, recalculando todos os \textit{hashes}. No tópico, é o caso de cortar o fim, o que se confunde com atraso, ou anexar ao fim um evento falso que se liga corretamente ao último verdadeiro.
 
-Essas alterações só são detectadas comparando a cabeça da cadeia, formada pelo último \texttt{event\_id} e pelo seu \textit{hash}, com uma âncora guardada fora do banco (Seção~\ref{sec:adulteracao}). O registro e o consumidor expõem a cabeça para esse fim, e o armazenamento e a comparação da âncora estão entre as propostas (Seção~\ref{sec:extensoes}). O encadeamento prova, portanto, que nada do que se recebeu foi alterado, mas não que se recebeu tudo.
+Essas alterações só são detectadas comparando a cabeça da cadeia, formada pelo último \texttt{event\_id} e pelo seu \textit{hash}, com uma âncora guardada fora do banco (Seção~\ref{sec:adulteracao}). O registro e o consumidor expõem a cabeça para esse fim, mas o armazenamento e a comparação da âncora não foram implementados. O encadeamento prova, portanto, que nada do que se recebeu foi alterado, mas não que se recebeu tudo.
+
+Propõe-se que o órgão responsável pela publicação emita a cabeça da cadeia junto com cada emenda AIRAC, pelo mesmo canal oficial da AIP, e que qualquer recebedor possa compará-la com a cabeça do registro ou do banco extraído que recebeu. Uma âncora não é substituída: cada emenda publica uma nova cabeça, e a cadeia de uma emenda deve conter, como prefixo, a da anterior. A âncora só vale tanto quanto a separação entre quem a publica e quem controla o registro. Se o mesmo agente controlar os dois, a garantia se reduz à confiança nesse agente.
 
 \subsection{Cadeia linear e árvore de Merkle}
 
-A árvore de Merkle oferece provas curtas de inclusão e de consistência (Seção~\ref{sec:adulteracao}), enquanto, na cadeia linear, o verificador refaz o percurso inteiro. Para o volume de um aeródromo, refazer o percurso tem custo baixo, e a cadeia é mais simples de especificar e de reimplementar, o que favorece justamente a verificação por terceiros. A árvore passa a valer a pena quando o registro cresce muito, ou quando é preciso provar um evento isolado a quem não deve receber o restante.
+A árvore de Merkle oferece provas curtas de inclusão e de consistência (Seção~\ref{sec:adulteracao}), enquanto, na cadeia linear, o verificador refaz o percurso inteiro. Para o volume de um aeródromo, refazer o percurso deve ter custo baixo, o que não foi medido, e a cadeia é mais simples de especificar e de reimplementar, o que favorece justamente a verificação por terceiros. A árvore passa a valer a pena quando o registro cresce muito, ou quando é preciso provar um evento isolado a quem não deve receber o restante.
 
 \section{O banco extraído}\label{sec:banco-extraido}
 
@@ -553,7 +569,7 @@ Para isso, a exportação deve ser fiel, com os mesmos eventos, \textit{hashes} 
 
 \section{Implementação}\label{sec:implementacao}
 
-A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.6.0 (\textit{commit} \texttt{e93b718}) \cite{aeroledger}. A biblioteca é escrita em Python~3.12 sobre PostgreSQL~14 ou superior, com \texttt{psycopg} para o acesso ao banco, \texttt{pyproj} para a geodésia e \texttt{shapely} para a geometria. A biblioteca é o objeto avaliado. Os experimentos a utilizam como qualquer usuário a utilizaria, e cada passo corresponde a uma chamada a ela. A Tabela~\ref{tab:implementacao} relaciona as peças da arquitetura aos componentes da biblioteca.
+A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.7.0 (\textit{commit} \texttt{fe478ea}) \cite{aeroledger}. A biblioteca é escrita em Python~3.12 sobre PostgreSQL~14 ou superior, com \texttt{psycopg} para o acesso ao banco, \texttt{pyproj} para a geodésia e \texttt{shapely} para a geometria. A biblioteca é o objeto avaliado. Os experimentos a utilizam como qualquer usuário a utilizaria, e cada passo corresponde a uma chamada a ela. A Tabela~\ref{tab:implementacao} relaciona as peças da arquitetura aos componentes da biblioteca.
 
 \begin{table}[htbp]
     \centering
@@ -565,9 +581,9 @@ A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.6.0 
         \midrule
         Escrita (Seção~\ref{sec:escrita}) & funções \texttt{escrever} e \texttt{escrever\_grupo}, que validam a forma e gravam na mesma transação \\
         Registro (Seção~\ref{sec:registro}) & tabelas \texttt{event} (envelope) e \texttt{event\_field} (uma linha por campo do corpo), apenas com inserção; tabela \texttt{referencial}, endereçada pelo conteúdo \\
-        Estado em $t$ (Seção~\ref{sec:leitura}) & \texttt{DISTINCT ON} sobre o índice (\textit{feature}, caminho, evento); varredura saltada do índice para listar as \textit{features} vivas \\
+        Estado em $t$ (Seção~\ref{sec:leitura}) & \texttt{DISTINCT ON} sobre o índice (\textit{feature}, caminho, evento); varredura saltada do índice para listar as \textit{features} vivas; limite que recua para antes de um grupo incompleto \\
         Cópias de leitura & tabelas \texttt{snapshot} e \texttt{projecao\_cache} (marca d'água) \\
-        Derivados & módulo \texttt{derivacoes}; erro \texttt{RegraPendente} para a pista com barreira de contenção \\
+        Derivados & módulo \texttt{derivacoes}; recusa por valor quando uma premissa da direção não foi declarada ou contradiz as \textit{features}; erro \texttt{RegraPendente} para a pista com barreira de contenção \\
         Lente da carta & módulo \texttt{adc} \\
         Tópico geral e consumidores (Seção~\ref{sec:distribuicao}) & módulo \texttt{topico}, com \texttt{retransmitir}, \texttt{Consumidor} e \texttt{TopicoMemoria}; erros \texttt{TopicoCorrompido} e \texttt{ConsumidorAtrasado} \\
         Verificação (Seção~\ref{sec:verificacao}) & funções \texttt{verificar\_cadeia} e \texttt{cabeca} \\
@@ -578,19 +594,19 @@ A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.6.0 
 
 A implementação difere da arquitetura em quatro pontos, que limitam o alcance dos experimentos:
 \begin{itemize}
-    \item a escrita é serializada por um bloqueio pessimista da linha da execução (\texttt{SELECT ... FOR UPDATE}), e as formas de escrita com várias fontes da Seção~\ref{sec:extensoes} não estão implementadas;
+    \item a escrita é serializada por um bloqueio pessimista da linha da execução (\texttt{SELECT ... FOR UPDATE}), e as formas de escrita com várias fontes da Seção~\ref{sec:trabalhos-futuros} não estão implementadas;
     \item o tópico é mantido em memória (\texttt{TopicoMemoria}), com o mesmo contrato que um sistema de mensagens cumpriria, isto é, anexar e ler a partir de uma posição;
     \item a regra das distâncias declaradas com barreira de contenção não está implementada, e a biblioteca recusa o cálculo quando há uma barreira viva;
     \item o motor de geometria é uma demonstração, que desenha a carta a partir do registro, mas não foi validado contra as cartas oficiais.
 \end{itemize}
 
-A biblioteca tem 57 testes próprios, sobre um aeródromo fictício, cada um executado em um banco descartável. Eles cobrem, entre outros aspectos, as recusas de escrita, as regras do referencial, os grupos e a equivalência entre a leitura com \textit{snapshot} e a reconstrução completa. Em relação aos grupos, verificam a contiguidade, a presença no \textit{hash} e a gravação de todos ou de nenhum dos eventos. Esses testes não integram a avaliação. Eles garantem que a biblioteca faz o que declara antes de ser avaliada sobre o SBSJ.
+A biblioteca tem 60 testes próprios, sobre um aeródromo fictício, cada um executado em um banco descartável. Eles cobrem, entre outros aspectos, as recusas de escrita, as regras do referencial, a recusa das distâncias cujas premissas faltam, os grupos e a equivalência entre a leitura com \textit{snapshot} e a reconstrução completa. Em relação aos grupos, verificam a contiguidade, a presença no \textit{hash}, a gravação de todos ou de nenhum dos eventos e o recuo da leitura, no registro e no consumidor, quando o limite cai dentro de um grupo. Esses testes não integram a avaliação. Eles garantem que a biblioteca faz o que declara antes de ser avaliada sobre o SBSJ.
 
 \section{Aplicação ao SBSJ}\label{sec:aplicacao-sbsj}
 
 \subsection{Cenário}
 
-Os experimentos usam duas cadeias. A cadeia \texttt{aixm} guarda a pista na forma em que as publicações chegam ao usuário e serve apenas ao E1. A cadeia \texttt{sbsj} guarda a pista no modelo proposto, com os dez eventos da Tabela~\ref{tab:eventos-sbsj}, na ordem em que os experimentos os escrevem. Essa ordem compreende a carga do eAIP como um grupo de cinco eventos (E2), a remedição da cabeceira~34 trinta dias depois (E2), uma interdição de três dias (E3) e uma restrição nova escrita durante o E6. Nenhum evento contém comprimento, azimute ou distância declarada, e todos esses valores são calculados na leitura (Seção~\ref{sec:derivados}). As premissas da carga vêm da AIP. A remedição e as restrições são simuladas, para exercitar o ciclo de vida.
+Os experimentos usam duas cadeias. A cadeia \texttt{publicado} guarda a pista na forma em que as publicações chegam ao usuário e serve apenas ao E1. A cadeia \texttt{sbsj} guarda a pista no modelo proposto, com os dez eventos da Tabela~\ref{tab:eventos-sbsj}, na ordem em que os experimentos os escrevem. Essa ordem compreende a carga do eAIP como um grupo de cinco eventos (E2), a remedição da cabeceira~34 trinta dias depois (E2), uma interdição de três dias (E3) e uma restrição nova escrita durante o E6. Nenhum evento contém comprimento, azimute ou distância declarada, e todos esses valores são calculados na leitura (Seção~\ref{sec:derivados}). As premissas da carga vêm da AIP. A remedição e as restrições são simuladas, para exercitar o ciclo de vida.
 
 \begin{table}[htbp]
     \centering
@@ -600,7 +616,7 @@ Os experimentos usam duas cadeias. A cadeia \texttt{aixm} guarda a pista na form
         \toprule
         \# & \textit{Feature} & Evento & Conteúdo \\
         \midrule
-        1--5 & \makecell[l]{SBSJ, SBSJ-RWY,\\ SBSJ-THR16,\\ SBSJ-THR34,\\ SBSJ-SWY} & \makecell[l]{\texttt{BASELINE},\\ em grupo} & carga do eAIP: aeródromo com referencial vigente e variação magnética; pista como retângulo entre as cabeceiras, com 45~m de largura; cabeceiras sobre os seus referentes; zona de parada de 283~m além da cabeceira~34 \\
+        1--5 & \makecell[l]{SBSJ, SBSJ-RWY,\\ SBSJ-THR16,\\ SBSJ-THR34,\\ SBSJ-SWY} & \makecell[l]{\texttt{BASELINE},\\ em grupo} & carga do eAIP: aeródromo com referencial vigente e variação magnética; pista como retângulo entre as extremidades, com 45~m de largura; cabeceiras sobre os seus referentes, com deslocamento nulo e presença de zona de parada e de zona livre de obstáculos declarados; zona de parada de 283~m além da cabeceira~34 \\
         6 & SBSJ-LEV-THR34 & \texttt{BASELINE} & levantamento que remede a cabeceira~34 (simulado) \\
         7 & SBSJ & \texttt{DELTA} & troca do referencial, com causa no evento~6 \\
         8--9 & SBSJ-RES-0001 & \makecell[l]{\texttt{BASELINE},\\ \texttt{VOID}} & interdição de 300~m a partir da cabeceira~34, com a pista como dona, e o seu encerramento (NOTAM simulado) \\
@@ -610,235 +626,22 @@ Os experimentos usam duas cadeias. A cadeia \texttt{aixm} guarda a pista na form
     \par\smallskip{\small Fonte: o autor, a partir de \citeonline{decea2026aip}.}
 \end{table}
 
-O referencial tem os dois referentes georreferenciados, com as coordenadas e elevações da seção AD~2.12, e o elemento linear entre eles. A pista entra como um retângulo de 45~m de largura entre as cabeceiras. A zona de parada entra como um retângulo de 283~m a partir da cabeceira~34, aplicado à direção~16. A variação magnética é de $22^\circ$W. O número 2675 não é escrito em nenhum evento.
+O referencial tem os dois referentes georreferenciados, com as coordenadas e elevações da seção AD~2.12, e o elemento linear entre eles. A pista entra como um retângulo de 45~m de largura entre as extremidades, que coincidem com as cabeceiras. A zona de parada entra como um retângulo de 283~m a partir da cabeceira~34, aplicado à direção~16. A variação magnética é de $22^\circ$W. O número 2675 não é escrito em nenhum evento.
+
+Cada direção declara deslocamento nulo e a ausência de zona livre de obstáculos; a direção~16 declara a zona de parada, e a~34, a sua ausência. Esses valores vêm da tabela de distâncias declaradas da AD~2.13, em que a LDA e a TODA são iguais à TORA nas duas direções. A observação da AD~2.12 que descreve a cabeceira~34 como deslocada (Seção~\ref{sec:req-minimo}) não é refletida na tabela. O cenário adota a tabela e registra o conflito no motivo do evento da cabeceira~34, de modo que a escolha fica afirmada, com autor, e não implícita. Como essas premissas são lidas das distâncias publicadas, a comparação da TODA e da LDA no E2 confere a regra de cálculo, mas não é independente delas.
 
 \subsection{Procedimentos dos experimentos}\label{sec:procedimentos}
 
-As perguntas e os critérios de aprovação de cada experimento estão na Seção~\ref{sec:experimentos}. Esta seção descreve como cada um é executado sobre o cenário.
+As perguntas e os critérios de aprovação estão na Seção~\ref{sec:experimentos}, e os ataques do E4 e do E6, nas Tabelas~\ref{tab:res-e4} e~\ref{tab:res-e6}. O instante $t_a$, logo após a carga do eAIP, serve de referência a todos os experimentos.
 
-\paragraph*{E1: causa.} A cadeia \texttt{aixm} não emula o AIXM completo, apenas as duas edições que o usuário recebe, com cada número publicado guardado como campo e sem causa. A pista é registrada com os valores da AOC de 2022 e, em seguida, alterada com os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e verifica-se se algum deles traz causa.
+\paragraph*{E1.} A cadeia \texttt{publicado} recebe a pista com os valores da AOC de 2022 e, em seguida, os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e as causas registradas.
 
-\paragraph*{E2: derivação.} Entram no registro apenas as premissas, isto é, as coordenadas e elevações das cabeceiras, a largura da pista e as dimensões da zona de parada. O comprimento, os azimutes, os rumos magnéticos e as distâncias declaradas são calculados e comparados com os valores da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m. Conferem-se então os eventos escritos e os novos valores contra o gabarito de Vincenty.
+\paragraph*{E2.} Entram no registro apenas as premissas: as coordenadas e elevações das cabeceiras, a largura da pista, as dimensões da zona de parada e, para cada direção, o deslocamento da cabeceira e a presença de zona de parada e de zona livre de obstáculos. Os valores calculados são comparados com os da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m, e conferem-se os eventos escritos e os novos valores contra o gabarito de Vincenty.
 
-\paragraph*{E3: reconstrução no tempo.} Após a remedição, uma interdição de 300~m a partir da cabeceira~34 entra como restrição, com a pista como dona, e é encerrada três dias depois. O banco é então consultado como um auditor faria, em instantes anteriores, intermediários e posteriores a cada mudança. São consultados:
-\begin{itemize}
-    \item o referencial vigente e o comprimento derivado;
-    \item a existência da interdição;
-    \item o envelope da troca de referencial;
-    \item as distâncias declaradas recalculadas para um instante passado;
-    \item a diferença entre dois instantes.
-\end{itemize}
-O instante $t_a$, logo após a carga do eAIP, serve de referência ao longo deste e dos experimentos seguintes.
+\paragraph*{E3.} Uma interdição de 300~m a partir da cabeceira~34 entra como restrição, com a pista como dona, e é encerrada três dias depois. O banco é consultado como um auditor faria, antes, durante e depois de cada mudança: o referencial vigente, o comprimento, a existência da interdição, o envelope da troca de referencial, as distâncias de um instante passado e a diferença entre dois instantes.
 
-\paragraph*{E4: evidência de adulteração.} O atacante tem acesso direto ao banco. Antes dos ataques, a cabeça da cadeia é anotada fora do banco, como âncora. São executados quatro ataques:
-\begin{itemize}
-    \item alterar o corpo de um evento sem recalcular o \textit{hash};
-    \item apagar um evento;
-    \item inserir um evento com \textit{hash} próprio correto;
-    \item alterar um evento e recalcular todos os \textit{hashes} até o fim.
-\end{itemize}
-Cada ataque é executado em uma cópia do banco e conferido de duas formas, pela verificação interna da cadeia e pela comparação com a âncora.
+\paragraph*{E4.} Com acesso direto ao banco, o atacante executa quatro ataques, cada um em uma cópia do banco. Cada ataque é conferido pela verificação interna da cadeia e pela comparação com a cabeça anotada antes, fora do banco.
 
-\paragraph*{E5: consistência e verificação.} Dois produtos são gerados do mesmo banco, antes e depois da remedição. O primeiro é a tabela da AIP, com o comprimento e as distâncias declaradas, e o segundo, o conteúdo da carta de aeródromo. Em seguida, o registro é exportado em JSON e entregue ao verificador independente, primeiro intacto e depois com a largura da pista alterada em um metro no arquivo.
+\paragraph*{E5.} A tabela da AIP e o conteúdo da carta de aeródromo são gerados do mesmo banco, antes e depois da remedição. O registro exportado em JSON é entregue ao verificador independente, primeiro intacto e depois com a largura da pista alterada em 1~m.
 
-\paragraph*{E6: leitura separada.} O registro é retransmitido para o tópico, e as seis propriedades do E6 são exercitadas da seguinte forma:
-\begin{itemize}
-    \item \textbf{equivalência}: um consumidor lê todo o tópico, e as suas respostas são comparadas com as do banco em cada fronteira de corte do histórico e em três instantes, a saber, logo após a carga, durante a interdição e um segundo antes do seu fim;
-    \item \textbf{atomicidade}: o banco e o consumidor são consultados com um limite que cai dentro da carga do eAIP, logo após a pista e antes da zona de parada;
-    \item \textbf{recorte}: um consumidor que assina apenas a cabeceira~16 é comparado com o que lê tudo;
-    \item \textbf{limite explícito e disponibilidade}: uma restrição nova é escrita no banco, e o consumidor é consultado sobre ela antes e depois de recebê-la, e novamente com o banco fechado;
-    \item \textbf{determinismo}: seis consumidores leem o tópico de formas diferentes, e comparam-se os \textit{hashes} das respostas no mesmo limite. As formas são tudo de uma vez; em laço, uma mensagem por vez; em lotes de duas mensagens, menores que a carga; por agendamento; com uma queda no meio e retomada a partir de uma posição gravada em arquivo; e a partir de um tópico refeito do zero;
-    \item \textbf{canal adulterado}: o atacante está no canal, e o banco não é tocado.
-\end{itemize}
-
-No canal adulterado, o alvo é a mensagem da troca de referencial, e alterá-la equivale a fazer o tópico afirmar que o referencial antigo continua vigente. São seis ataques:
-\begin{itemize}
-    \item trocar o referencial sem recalcular o \textit{hash};
-    \item trocar o referencial e recalcular o \textit{hash} da mensagem;
-    \item remover a mensagem;
-    \item inserir depois dela um evento falso com ligação e \textit{hash} corretos;
-    \item remover as últimas mensagens;
-    \item anexar ao fim um evento falso com ligação e \textit{hash} corretos.
-\end{itemize}
-
-\subsection{Geração do banco extraído}
-
-O banco extraído é gerado por um programa que escreve, por meio da biblioteca, o mesmo cenário dos experimentos em um PostgreSQL vazio. Em seguida, o programa exporta o resultado para SQLite com consultas SQL diretas, sem passar pela biblioteca, e confere o arquivo com o verificador independente.
-
-A fidelidade da exportação é verificada de três formas. A primeira é a integridade e a cabeça das duas cadeias no arquivo. A segunda é o comprimento calculado pelo verificador a partir do referencial exportado. A terceira é a consulta de estado no SQLite, feita apenas com as visões do arquivo e comparada com a da biblioteca em todos os pares de corte e \textit{feature}.
-
-\section{Extensões propostas}\label{sec:extensoes}
-
-A arquitetura pode ser ampliada para atender a cenários de escrita
-concorrente, padronização dos dados, distribuição em maior escala, consultas
-mais expressivas e verificação independente do histórico. As extensões
-descritas a seguir são propostas e não foram implementadas nem avaliadas
-experimentalmente. Elas preservam o registro como fonte das afirmações,
-acrescentando mecanismos nas etapas de escrita, distribuição ou leitura.
-
-\subsection{Escrita com várias fontes}
-
-A informação aeronáutica combina dados provenientes de diferentes agentes,
-como operadores de aeródromos, órgãos de informação aeronáutica e equipes
-de levantamento. Para acomodar essas fontes sem comprometer a ordem do
-histórico, propõe-se um escritor único por cadeia, precedido por uma fila
-de comandos. Cada comando recebe uma chave de idempotência, permitindo
-reconhecer reenvios e evitar gravações duplicadas. O escritor valida os
-comandos, registra os eventos em sequência e confirma sua aceitação ao
-remetente.
-
-A concorrência também pode ser controlada por \textit{feature}. Para
-escrever, o agente informa o último \texttt{event\_id} que observou.
-Se a \textit{feature} tiver sido alterada desde então, a operação é recusada
-e o agente deve consultar o estado atualizado antes de tentar novamente.
-Esse controle otimista evita que uma alteração seja aceita com base em
-uma versão desatualizada. Uma restrição de unicidade sobre o par formado
-pela cadeia e pelo \textit{hash} anterior reforça a prevenção de bifurcações
-acidentais. A versão confirmada também pode identificar o limite de leitura
-e compor a chave de cache, desde que esses mecanismos utilizem a mesma
-definição de versão.
-
-\subsection{Norma de preenchimento}
-
-A flexibilidade do registro permite acomodar diferenças entre aeródromos,
-mas não determina quais informações são necessárias para validar os dados
-ou calcular os derivados. Propõe-se, por isso, uma norma de preenchimento
-organizada em três camadas:
-\begin{itemize}
-    \item uma camada obrigatória, validada na escrita, que define os tipos
-    dos elementos, as unidades, a origem dos valores e os requisitos
-    mínimos para o cálculo dos derivados;
-    \item uma camada recomendada, baseada no catálogo de dados aeronáuticos
-    do PANS-AIM~\cite{icao2018pansaim}, que padroniza nomes e unidades;
-    \item uma camada de extensão, identificada pelo prefixo \texttt{x\_},
-    destinada a campos específicos. Campos recorrentes podem ser
-    incorporados à camada recomendada em versões posteriores da norma.
-\end{itemize}
-
-A norma distingue três estados de ausência: ``não informado'',
-``não se aplica'' e ``desconhecido''. Essa distinção impede que a falta
-de uma premissa seja interpretada automaticamente como zero. Por exemplo,
-se o deslocamento de uma cabeceira for necessário para um cálculo, sua
-ausência deve resultar na recusa desse cálculo.
-
-A norma é versionada para que cada evento possa ser interpretado segundo
-as regras aplicáveis, sem reescrever o histórico. Assim, a estrutura do
-registro preserva as afirmações originais, enquanto a interpretação
-padronizada pode evoluir de forma reproduzível.
-
-\subsection{Transporte e escala}
-
-Para o volume de dados de um único aeródromo, o próprio banco pode atender
-à distribuição dos eventos. Em cenários de maior escala, um sistema de
-mensageria, como o Kafka~\cite{kreps2011kafka}, pode desacoplar a escrita
-do consumo e distribuir os eventos entre diferentes leitores. A adoção
-desse mecanismo, entretanto, não elimina a necessidade de verificar a
-integridade e a continuidade da cadeia.
-
-Duas estratégias podem reduzir o volume transmitido. Na primeira, o tópico
-transporta apenas os envelopes dos eventos, e o consumidor busca no registro
-os corpos necessários ao seu recorte, conferindo cada um contra o
-\textit{hash} declarado. Essa abordagem reduz o tráfego, mas mantém a
-dependência de acesso ao registro.
-
-Na segunda, tópicos derivados distribuem eventos por \textit{feature} ou
-por aeródromo, permitindo segmentar o fluxo conforme as necessidades de
-cada consumidor. Como esses tópicos podem omitir eventos da cadeia original,
-a verificação exige informações suficientes para detectar lacunas e
-confirmar a ligação dos eventos recebidos ao histórico de origem.
-
-\subsection{Consulta}
-
-A distribuição define como os eventos chegam ao consumidor; a consulta
-define como o estado reconstruído pode ser interrogado. Uma possibilidade
-é utilizar GraphQL sobre a projeção local do consumidor. Nesse modelo,
-a consulta especifica o limite de leitura, seleciona o fecho de dependências
-e acessa as relações declaradas e os derivados calculados segundo a regra
-aplicável.
-
-Outra possibilidade é empregar uma linguagem de consulta lógica, como
-Datalog, utilizada pelo Datomic~\cite{cognitect2026}. A escolha da linguagem
-determina como as perguntas são expressas, mas não altera a origem dos
-dados nem as regras de reconstrução do estado. Os resultados continuam
-condicionados ao histórico verificado, ao recorte selecionado, ao limite
-de leitura e à regra de cálculo utilizada.
-
-\subsection{Dois eixos de tempo}
-
-Uma extensão bitemporal, conforme discutido na
-Seção~\ref{sec:bitemporal}, permitiria distinguir o tempo de transação,
-controlado pelo sistema, do tempo de validade, declarado em cada afirmação.
-Com isso, seria possível consultar tanto o estado conhecido pelo sistema
-em determinado instante quanto o estado correspondente a um período de
-validade específico.
-
-Essa extensão também afeta a estratégia de consulta. Enquanto o tempo de
-transação permite percorrer o histórico em ordem, as consultas por intervalos
-de validade podem se beneficiar de índices especializados, como um índice
-GiST sobre \texttt{tstzrange} no PostgreSQL. Quando o fim de um intervalo
-puder ser inferido de afirmações posteriores, ele poderá ser calculado
-durante a leitura, sem alterar afirmações anteriores.
-
-\subsection{Âncora e prova de inclusão}
-
-Para permitir a verificação independente do histórico, propõe-se publicar
-o \textit{hash} da cabeça da cadeia a cada emenda AIRAC ou depositá-lo,
-junto com o banco extraído, em um repositório com histórico verificável.
-A comparação com uma referência obtida por um canal independente permitiria
-detectar alterações posteriores ao estado ancorado, desde que a referência
-publicada não pudesse ser substituída silenciosamente.
-
-Quando for necessário comprovar a inclusão de um evento sem compartilhar
-todo o registro, uma árvore de Merkle poderá fornecer uma prova compacta
-de pertencimento a um conjunto comprometido. Essa estratégia seria útil,
-por exemplo, no compartilhamento seletivo de dados operacionais entre
-empresas. A prova demonstraria a inclusão do evento no conjunto
-correspondente, mas não garantiria a veracidade de seu conteúdo.
-
-\section{Limites conhecidos}\label{sec:limites-arq}
-
-As limitações a seguir dizem respeito às garantias da arquitetura
-apresentada. Restrições específicas do protótipo, como funcionalidades
-não implementadas e limitações de desempenho, são discutidas na
-Seção~\ref{sec:implementacao}.
-
-\begin{itemize}
-    \item \textbf{Autoria:} o campo \texttt{asserted\_by} identifica o autor
-    por texto, mas não comprova sua identidade, pois a arquitetura não exige
-    assinatura digital.
-
-    \item \textbf{Integridade sem âncora externa:} a cadeia de
-    \textit{hashes} permite verificar a consistência interna do histórico,
-    mas não impede que alguém com controle sobre todo o registro o
-    reescreva. Sem uma referência independente, também não é possível
-    confirmar se o histórico recebido corresponde ao anteriormente
-    publicado.
-
-    \item \textbf{Interpretação dos dados:} sem uma norma de preenchimento,
-    a ausência de um campo pode ser confundida com um valor válido, como
-    zero. A distinção entre ausência, inaplicabilidade e desconhecimento
-    depende da adoção de convenções explícitas.
-
-    \item \textbf{Confidencialidade:} o tópico geral expõe os eventos nele
-    publicados aos seus consumidores. O isolamento de dados restritos exige
-    mecanismos adicionais, como fluxos separados e controles de acesso.
-    A publicação de \textit{hashes}, isoladamente, não garante
-    confidencialidade.
-
-    \item \textbf{Escopo temporal e espacial:} cada cadeia representa um
-    único aeródromo, e a ordenação de eventos entre aeródromos distintos
-    não é definida. Além disso, o modelo atual utiliza apenas o tempo de
-    transação; consultas pelo tempo de validade exigem uma extensão
-    bitemporal.
-
-    \item \textbf{Banco extraído:} o arquivo preserva o histórico registrado,
-    mas não inclui necessariamente os derivados nem impede modificações
-    diretas. Sua integridade depende de verificações realizadas sobre o
-    conteúdo e de uma referência confiável para comparação.
-
-    \item \textbf{Veracidade:} a integridade do histórico não garante que
-    as medições estejam corretas. A arquitetura permite rastrear quem
-    afirmou um valor, quando a afirmação foi registrada e de quais dados
-    ela depende, mas a validação factual exige fontes e procedimentos
-    externos.
-\end{itemize}
+\paragraph*{E6.} O registro é retransmitido para o tópico. Um consumidor é comparado com o banco em cada fronteira de corte e em três instantes. Banco, consumidor e primitiva SQL de estado são consultados com um limite no meio da carga. Um consumidor que assina só a cabeceira~16 é comparado com o que lê tudo. Uma restrição nova é consultada antes e depois de recebida e com o banco fechado. Seis consumidores, que leem o tópico de formas diferentes, são comparados no mesmo limite: de uma vez, um a um, em lotes de dois, por agendamento, com queda e retomada, e a partir de um tópico refeito do zero. Por fim, o canal é atacado de seis formas, com alvo na mensagem da troca de referencial, sem tocar o banco.

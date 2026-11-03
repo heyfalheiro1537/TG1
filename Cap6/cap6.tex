@@ -1,48 +1,50 @@
-Este capítulo interpreta os resultados do Capítulo~\ref{chap:resultados} à luz da pergunta de pesquisa. A Seção~\ref{sec:disc-resposta} responde à pergunta e localiza os limites da auditabilidade obtida, e a Seção~\ref{sec:disc-demonstrado} separa o que foi demonstrado do que é apenas argumentado. As Seções~\ref{sec:disc-aixm} e~\ref{sec:disc-impactos} relacionam a arquitetura com o AIXM e com o fluxo atual da informação aeronáutica. A Seção~\ref{sec:disc-analogia} examina o alcance da analogia com os sistemas financeiros, e a Seção~\ref{sec:disc-operacionais}, a extensão a dados operacionais. O capítulo termina com as ameaças à validade (Seção~\ref{sec:disc-validade}) e com a natureza da contribuição (Seção~\ref{sec:disc-contribuicao}).
+Este capítulo interpreta os resultados à luz da pergunta de pesquisa, separa o que foi demonstrado do que é argumentado e relaciona a arquitetura com o AIXM, com o fluxo atual da informação aeronáutica e com a analogia financeira.
 
 \section{Resposta à pergunta de pesquisa}\label{sec:disc-resposta}
 
 Este trabalho pergunta em que medida uma arquitetura baseada em \textit{event sourcing} torna auditáveis os dados geolocalizados de infraestrutura aeroportuária, e quais são os limites dessa auditabilidade. No estudo de caso do SBSJ, os resultados sustentam a hipótese, e cada uma das cinco propriedades enunciadas no Capítulo~\ref{chap:introducao} encontra respaldo em ao menos um experimento aprovado.
 \begin{itemize}
-    \item A rastreabilidade até a causa aparece por contraste no E1 e se confirma no E3, em que o envelope da troca de referencial identifica autor, motivo e causa.
+    \item A ausência de rastreabilidade nas publicações atuais é caracterizada no E1, e a rastreabilidade até a causa se confirma no E3, em que o envelope da troca de referencial identifica autor, motivo e causa.
     \item A derivação a partir das premissas é mostrada pelo E2, com os valores publicados recalculados dentro da precisão da AIP.
     \item A reconstrução no tempo é o objeto do E3.
-    \item A consistência entre produtos decorre do E5 e se estende aos consumidores no E6.
+    \item A consistência entre produtos decorre do E5 e se estende aos consumidores no E6. Consistência, aqui, não é correção: produtos que aplicam a mesma regra concordam entre si mesmo se a regra estiver errada.
     \item A evidência de adulteração resulta do E4 e do E6, e se mantém no banco extraído.
 \end{itemize}
 
 A resposta, contudo, não é irrestrita. A auditabilidade obtida é documental. A arquitetura garante que se saiba o que foi afirmado, por quem, quando, com base em quais premissas, e que esse registro não foi alterado. Ela não garante que o afirmado seja verdadeiro. Uma medição errada, registrada com autor e causa, permanece errada, embora deixe de ser silenciosa. Essa distinção corresponde à delimitação feita na Introdução, segundo a qual o problema tratado é de rastreabilidade, e não de exatidão.
 
-Os limites revelados pelos experimentos e pela implementação podem ser agrupados em três classes. A primeira reúne os limites que dependem de um elemento externo ao registro. A reescrita completa da cadeia, no banco ou no tópico, só é detectada por comparação com uma âncora guardada fora do sistema, e a autoria só é comprovada com assinatura digital. Nenhum mecanismo interno supera essas duas restrições, que são, por isso, as mais fundamentais.
-
-A segunda classe reúne os limites que dependem de extensões desenhadas, mas não implementadas. Sem a norma de preenchimento, uma premissa opcional ausente é lida como zero, e não como ``não informado''. Sem o segundo eixo de tempo, o registro responde ao que o sistema sabia em cada instante, mas não ao que era verdadeiro no mundo.
-
-A terceira classe reúne os limites de escala e de escopo. A composição de várias pistas, a escrita concorrente a partir de várias fontes e o custo de leitura não foram medidos, porque o estudo de caso é pequeno demais para isso.
+Os limites, reunidos na Tabela~\ref{tab:disc-demonstrado}, são de dois tipos. Os mais fundamentais dependem de um elemento externo ao registro: a reescrita completa da cadeia só é detectada com uma âncora guardada fora do sistema, e a autoria só é comprovada com assinatura digital. Nenhum mecanismo interno supera essas duas restrições. Os demais decorrem de extensões não implementadas, como a norma de preenchimento e o segundo eixo de tempo, e do escopo da avaliação, restrita a uma pista.
 
 \section{O que é demonstrado e o que é argumentado}\label{sec:disc-demonstrado}
 
-Um dos objetivos específicos deste trabalho é distinguir o que os experimentos demonstram do que é apenas argumentado. A Tabela~\ref{tab:disc-demonstrado} organiza essa distinção.
+Um dos objetivos específicos deste trabalho é distinguir o que os experimentos demonstram do que é apenas argumentado. A Tabela~\ref{tab:disc-demonstrado} organiza essa distinção por propriedade. Para cada uma, indica o mecanismo que a sustenta, a evidência obtida, a situação do mecanismo e o limite que permanece. A situação tem três níveis: implementado e avaliado nos experimentos, implementado mas não validado no domínio, e apenas argumentado ou proposto.
 
 \begin{table}[htbp]
     \centering
-    \caption{Situação das afirmações do trabalho.}
+    \caption{Propriedades, mecanismos, evidência e limites.}
     \label{tab:disc-demonstrado}
-    \begin{tabularx}{\linewidth}{X l l}
+    \footnotesize
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.75cm} >{\raggedright\arraybackslash}X l >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}X}
         \toprule
-        Afirmação & Situação & Base \\
+        Propriedade & Mecanismo & Evidência & Situação & Limite \\
         \midrule
-        Valores derivados recalculados dentro da precisão publicada & demonstrada & E2 \\
-        Remedição sem reescrita de posições & demonstrada & E2 \\
-        Reconstrução de qualquer instante com autor, motivo e causa & demonstrada & E3 \\
-        Detecção de alteração no meio da cadeia & demonstrada & E4, E6 \\
-        Produtos do mesmo registro não divergem & demonstrada & E5, E6 \\
-        Verificação por terceiro sem a biblioteca & demonstrada & E5, banco extraído \\
-        Leitura separada sem estados intermediários & demonstrada & E6 \\
-        Composição de várias pistas e do lado ar completo & argumentada & Seção~\ref{sec:referencial} \\
-        Escalabilidade da leitura por réplicas e cache & argumentada & Seção~\ref{sec:distribuicao} \\
-        Escrita concorrente a partir de várias fontes & proposta & Seção~\ref{sec:extensoes} \\
-        Âncora externa publicada com a emenda AIRAC & proposta & Seção~\ref{sec:extensoes} \\
-        Interoperabilidade entre organizações & argumentada & E5, E6 (condições) \\
+        Proveniência causal & envelope com autor, motivo e causa & E1, E3 & implementado e avaliado & autoria declarada, não comprovada \\
+        Derivação a partir das premissas & derivados na leitura, pela regra do Anexo~14, com recusa por premissa não declarada & E2 & implementado e avaliado & TODA e LDA conferidas contra premissas lidas da própria AD~2.13; sem regra para barreira de contenção; exatidão do levantamento não avaliada \\
+        Posição relativa e remedição & referencial endereçado pelo conteúdo e \textit{seeds} & E2 & implementado e avaliado & uma pista, com dois referentes \\
+        Reconstrução no tempo & registro só de acréscimos, com tempo de transação & E3 & implementado e avaliado & histórico documental; relógio simulado nos experimentos; tempo de validade apenas proposto \\
+        Evidência de adulteração & cadeia de \textit{hash} sobre forma canônica & E4, E6 & implementado e avaliado & reescrita completa e alteração no fim só com âncora externa \\
+        Verificação por terceiro & especificação pública e verificador independente & E5, banco extraído & implementado e avaliado & o arquivo evidencia alterações, mas não as impede; banco extraído publicado gerado com a versão anterior \\
+        Consistência entre produtos & produtos como modelos de leitura da mesma fonte, com regra identificada & E5, E6 & implementado e avaliado & consistência não é correção da regra \\
+        Leitura separada & tópico, consumidores, limite explícito e grupos & E6 & implementado e avaliado & tópico em memória; sistema de mensagens real, escala e confidencialidade não testados \\
+        Geometria derivada & primitivos gerados a partir das \textit{seeds} & -- & implementado, não validado & não comparada às cartas oficiais \\
+        Composição do lado ar completo & forma comum do registro & -- & argumentado & não testada com várias pistas; uma cadeia por aeródromo, sem ordem entre aeródromos \\
+        Confidencialidade & fluxos separados e controle de acesso & -- & proposto & o tópico geral expõe todos os eventos a quem o lê \\
+        Leitura em escala & réplicas, \textit{snapshots} e caches & -- & argumentado & custo não medido \\
+        Interoperabilidade & especificação pública e banco extraído & E5, E6 & argumentado & um único publicador \\
+        Escrita concorrente & fila de comandos e controle otimista & -- & proposto & bloqueio pessimista, sem teste com várias fontes \\
+        Âncora externa & cabeça publicada com a emenda AIRAC & -- & proposto & não publicada nem comparada automaticamente \\
+        Norma de preenchimento e bitemporalidade & camadas de campos e tempo de validade & -- & proposto & -- \\
         \bottomrule
     \end{tabularx}
     \par\smallskip{\small Fonte: o autor.}
@@ -52,11 +54,11 @@ As afirmações demonstradas valem para o cenário avaliado e foram submetidas a
 
 \section{Relação com o AIXM e com a publicação atual}\label{sec:disc-aixm}
 
-A arquitetura não substitui o AIXM. O E1 não emula o modelo AIXM completo, mas apenas a forma como as publicações chegam ao usuário, em edições sucessivas sem registro de causa. O AIXM dispõe de \textit{TimeSlices}, números de sequência e de correção e anotações (Seção~\ref{sec:aixm}). O que lhe falta, e o que a arquitetura acrescenta, são a retenção obrigatória do histórico, a evidência de adulteração e o registro estruturado das premissas e da causa.
+A arquitetura não substitui o AIXM. O E1 não emula o modelo AIXM completo, mas apenas a forma como as publicações chegam ao usuário, em edições sucessivas sem registro de causa. O AIXM dispõe de \textit{TimeSlices}, números de sequência e de correção e anotações (Seção~\ref{sec:aixm}). O que falta, e o que a arquitetura acrescenta, está nos três níveis da Seção~\ref{sec:aixm}: no formato, o registro estruturado das premissas e da causa e a evidência de adulteração; na implementação, a retenção obrigatória do histórico; e, no fluxo de publicação, a entrega desse histórico a quem usa os dados.
 
 As duas abordagens são, por isso, complementares. Do ponto de vista do CQRS, uma exportação em AIXM é mais um modelo de leitura do registro, assim como a lente da carta de aeródromo. Cada \textit{TimeSlice} pode ser gerada a partir do estado em um instante, sem que o registro precise adotar o esquema do AIXM. O caminho inverso também é possível. Uma carga inicial a partir de dados em AIXM entra como um grupo de eventos \texttt{BASELINE}, com o provedor como autor. Desse ponto em diante, cada alteração passa a ter causa.
 
-A mesma lógica se aplica ao ciclo AIRAC. A arquitetura não altera a cadência de publicação, mas oferece a ela um complemento natural. A cabeça da cadeia, publicada com cada emenda, funcionaria como âncora externa (Seção~\ref{sec:extensoes}). Quem conservasse as emendas poderia verificar, a qualquer tempo, que o histórico não foi reescrito. Esse ponto toca uma lacuna do próprio PANS-AIM, que estabelece requisitos de integridade, mas ainda não detalha como o usuário final confere os dados que recebe \cite{icao2018pansaim}.
+A mesma lógica se aplica ao ciclo AIRAC. A arquitetura não altera a cadência de publicação, mas oferece a ela um complemento natural. A cabeça da cadeia, publicada com cada emenda, funcionaria como âncora externa (Seção~\ref{sec:verificacao}). Quem conservasse as emendas poderia verificar, a qualquer tempo, que o histórico não foi reescrito. Esse ponto toca uma lacuna das normas atuais. O PANS-AIM estabelece requisitos de integridade \cite{icao2018pansaim}, e a DO-200B exige que o usuário tenha um meio de conferir a integridade do que recebe \cite{rtca2015do200b}, mas esse meio protege contra a corrupção na transmissão e no armazenamento. Ele não detecta a reescrita do histórico nem informa a causa de uma mudança.
 
 \section{Impactos operacionais}\label{sec:disc-impactos}
 
@@ -66,25 +68,17 @@ Cada etapa passa a escrever afirmações, e não valores finais. A equipe de lev
 
 Para quem recebe os dados, como operadores aéreos, fornecedores de cartas e a ANAC, três mudanças práticas decorrem disso. A primeira é que a diferença entre duas edições deixa de ser uma comparação manual entre documentos e passa a ser uma consulta, com a causa de cada campo alterado. A segunda é que o recebedor pode verificar a integridade do que recebeu sem depender de quem publicou. A terceira é a redução do trabalho de conciliação entre a AIP e as cartas, pois produtos gerados do mesmo registro para o mesmo instante não divergem por construção.
 
-O próprio caso do SBSJ ilustra o alcance dessas mudanças. Com o registro proposto, a diferença entre a AOC de 2022 e a ADC de 2026 viria acompanhada do evento que a produziu, fosse ele um levantamento, uma obra ou uma correção. A observação da seção AD~2.12 sobre a cabeceira~34 deslocada, discutida na Seção~\ref{sec:req-minimo}, também deixaria de ser ambígua. O deslocamento seria uma premissa da direção de pista, e a LDA seria calculada a partir dela. Uma LDA igual à TORA indicaria, então, um deslocamento nulo registrado com autor e data, e não uma dúvida entre o texto e a tabela.
+O próprio caso do SBSJ ilustra o alcance dessas mudanças. Com o registro proposto, a diferença entre a AOC de 2022 e a ADC de 2026 viria acompanhada do evento que a produziu, fosse ele um levantamento, uma obra ou uma correção. A observação da seção AD~2.12 sobre a cabeceira~34 deslocada, discutida na Seção~\ref{sec:req-minimo}, também deixaria de ser ambígua. O deslocamento é uma premissa da direção de pista, e a LDA é calculada a partir dela. No cenário avaliado, a direção~34 afirma deslocamento nulo, com o DECEA como autor e, no motivo, o conflito entre a observação da AD~2.12 e a tabela da AD~2.13. Uma LDA igual à TORA passa, então, a indicar um deslocamento nulo afirmado por alguém, e não uma dúvida silenciosa entre o texto e a tabela. Se o deslocamento não tivesse sido declarado, a LDA seria recusada.
 
-A adoção, por fim, não exige padronização prévia. A arquitetura registra o que existe, com corpo livre, e a norma de preenchimento vem depois, do lado da leitura (Seção~\ref{sec:extensoes}). Essa ordem reduz o custo de entrada para órgãos e operadores com dados heterogêneos.
+A adoção, por fim, não exige padronização prévia. A arquitetura registra o que existe, com corpo livre, e a norma de preenchimento vem depois, do lado da leitura (Seção~\ref{sec:trabalhos-futuros}). Essa ordem reduz o custo de entrada para órgãos e operadores com dados heterogêneos.
 
 \section{Alcance da analogia financeira}\label{sec:disc-analogia}
 
 A analogia com o livro-razão orienta a arquitetura desde a Introdução, e os resultados permitem delimitar até onde ela vale. Ela vale para o registro e para a auditoria. Nada se apaga, toda correção é um novo lançamento, o valor corrente é derivado do histórico, e dois relatórios do mesmo livro precisam conciliar. O E3 e o E5 confirmam essas propriedades no domínio aeronáutico.
 
-A analogia deixa de valer em dois pontos. O primeiro é a conservação. Na contabilidade, as partidas de um lançamento somam zero, e um lançamento incompleto se denuncia na conciliação. Na informação aeronáutica, os valores derivados resultam de geometria e de regras normativas, sem lei de conservação. Uma pista sem zona de parada é um estado plausível, e uma ASDA igual à TORA não acusa erro algum, como o E6 mostra ao ler o banco no meio da carga. A atomicidade, que na contabilidade é verificável depois, precisa aqui ser imposta na escrita e respeitada na leitura, o que justifica o mecanismo de grupos.
+A analogia deixa de valer em dois pontos. O primeiro é a conservação. Na contabilidade, as partidas de um lançamento somam zero, e um lançamento incompleto se denuncia na conciliação. Na informação aeronáutica, os valores derivados resultam de geometria e de regras normativas, sem lei de conservação. Uma pista sem zona de parada é um estado plausível, e uma ASDA igual à TORA não acusa erro algum por si só. As declarações das direções recuperam parte da conferência, pois uma zona de parada declarada e ausente leva à recusa, mas só para as premissas das distâncias declaradas. A atomicidade, que na contabilidade é verificável depois, precisa aqui ser imposta na escrita e respeitada na leitura, o que justifica o mecanismo de grupos.
 
 O segundo ponto é a natureza do objeto registrado. O lançamento contábil constitui o próprio fato, ao passo que o registro aeronáutico descreve um objeto físico que existe independentemente dele (Seção~\ref{sec:bitemporal}). Por isso, um único eixo de tempo basta à contabilidade, mas não esgota as perguntas que se fazem sobre uma pista. A extensão bitemporal decorre, portanto, da diferença entre os domínios, e não de uma deficiência da arquitetura.
-
-\section{Extensão a dados operacionais}\label{sec:disc-operacionais}
-
-A forma comum do registro permite que elementos de natureza operacional entrem como novas \textit{features}, sem mudança de esquema. Esses elementos incluem relatos de ocorrência, inspeções de pista, objetos estranhos (FOD), avistamentos de fauna, condições de pista e eventos de voo, como arremetidas, aproximações não estabilizadas e pousos longos. Cada um se liga à pista pelo dono (\texttt{owner\_ref}), declara a sua fonte como autor e pode ser reclassificado depois por um \texttt{DELTA}. Medições contínuas, como dados meteorológicos ou parâmetros de monitoramento de voo, ficam melhor em bases de séries temporais. No registro, entraria apenas um evento de ancoragem com o \textit{hash} de cada lote, que herdaria a proteção da cadeia.
-
-O ganho dessa extensão está em ligar a operação ao estado da infraestrutura no instante da ocorrência. Para cada evento de voo, o registro responde o que estava publicado, quais interdições estavam vigentes e quais eram as distâncias declaradas naquele momento. Isso habilita estudos de antes e depois de mudanças na infraestrutura. Um exemplo é comparar a taxa de arremetidas em uma cabeceira antes e depois de um deslocamento ou de uma remedição, o que exige saber exatamente quando cada versão entrou em vigor. Na investigação de uma ocorrência, a pergunta sobre a informação de que a tripulação dispunha corresponde justamente ao que o tempo de transação responde. Nesse caso, o limite de um único eixo converte-se em vantagem. Uma cadeia causal como relato de FOD, interdição temporária e reabertura tem a mesma forma da sequência avaliada no E3, agora com origem operacional real.
-
-Essa extensão exige três cuidados. O primeiro é a distinção entre o instante do fato e o do registro. Um evento de voo detectado no monitoramento pode ser registrado dias depois, e a consulta à infraestrutura deve usar o instante declarado no corpo, o que reforça a utilidade da extensão bitemporal. O segundo é a confidencialidade. Dados de monitoramento de voo pertencem às empresas aéreas e estão protegidos pelo Anexo~19 \cite{icaoanexo19}, e dados pessoais estão sujeitos à Lei Geral de Proteção de Dados \cite{lgpd2018}. Como o registro é imutável, esses dados devem ficar fora dele, representados apenas por referências ou \textit{hashes}, em forma desidentificada. A integridade verificável, nesse contexto, favorece o compartilhamento entre empresas e aeroportos, pois cada parte pode conferir o que recebe. O terceiro cuidado é que a análise estatística deve ser feita sobre modelos de leitura projetados dos eventos, e não sobre o registro, como prevê o CQRS. Essa extensão não foi avaliada e é apresentada como direção de trabalho.
 
 \section{Ameaças à validade}\label{sec:disc-validade}
 
@@ -97,5 +91,7 @@ Quanto à validade de construto, a auditabilidade foi operacionalizada como cinc
 \section{Natureza da contribuição}\label{sec:disc-contribuicao}
 
 Na classificação de \citeonline{gregor2013}, a contribuição deste trabalho é uma exaptação, isto é, a aplicação de soluções conhecidas em um domínio a um problema de outro domínio. Nenhum dos mecanismos empregados é novo isoladamente. O \textit{event sourcing}, o encadeamento por \textit{hash}, o referenciamento linear e o CQRS têm literatura e uso consolidados. A contribuição está na sua composição para os dados de infraestrutura aeroportuária e na adaptação que esse domínio exige. Exemplos dessa adaptação são as posições relativas a referentes, os derivados calculados por regras normativas, a atomicidade imposta na escrita e a distinção entre o registro e o objeto físico. A Tabela~\ref{tab:origem} indica, elemento a elemento, o que foi adotado, adaptado ou proposto.
+
+Os mecanismos organizam-se em torno de três propriedades. A primeira é a proveniência causal, isto é, a capacidade de dizer por que um valor mudou, quem o afirmou e de qual evento a mudança decorre. A segunda é a derivação a partir de premissas retidas, pela qual os valores publicados são recalculados, e não guardados, e uma nova medição se propaga sem reescrita. A terceira é a auditabilidade do histórico, que permite reconstruir qualquer instante e verificar, sem confiar em quem publica, que o que se recebeu não foi alterado. Os demais elementos, como o tópico, os consumidores, os caches e o banco extraído, são os meios pelos quais essas propriedades chegam a quem lê.
 
 A contribuição materializa-se em quatro artefatos. O primeiro é a arquitetura, descrita de forma independente da implementação. O segundo é a biblioteca de código aberto, que mostra que a arquitetura é implementável com tecnologia comum. O terceiro é o banco extraído do SBSJ, publicado como conjunto de dados aberto, que permite a terceiros reproduzir parte da avaliação sem a biblioteca. O quarto é o método de avaliação por falseamento, com critérios definidos antes da execução, reprodutível a partir dos repositórios. O Capítulo~\ref{chap:conclusao} retoma esses resultados e indica os trabalhos futuros.
