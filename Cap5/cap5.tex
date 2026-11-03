@@ -1,4 +1,4 @@
-Este capítulo apresenta os resultados dos seis experimentos, na ordem em que foram definidos na Seção~\ref{sec:experimentos} e executados conforme a Seção~\ref{sec:procedimentos}. Para cada experimento, apresenta-se primeiro o que foi obtido e, em seguida, a resposta à pergunta correspondente. Todos os números provêm do \textit{notebook} executado \cite{aeroledger_experimentos}. A Seção~\ref{sec:res-banco} trata do banco extraído, a Seção~\ref{sec:res-sintese} reúne as respostas, e a Seção~\ref{sec:res-limites} discute os limites da avaliação.
+Este capítulo apresenta os resultados dos seis experimentos, na ordem da Seção~\ref{sec:experimentos}. Para cada um, apresenta-se o que foi obtido e a resposta à pergunta correspondente. Todos os números provêm do \textit{notebook} executado \cite{aeroledger_experimentos}.
 
 \section{E1: causa}\label{sec:res-e1}
 
@@ -141,7 +141,7 @@ A resposta ao E6 é positiva, com o mesmo limite do E4. Quem lê pelo tópico ch
 
 \section{Banco extraído}\label{sec:res-banco}
 
-O arquivo publicado foi gerado com a versão 0.6.0 da biblioteca, antes da declaração das premissas das direções e da renomeação da cadeia do E1, e por isso os seus \textit{hashes} não coincidem com os da execução apresentada neste capítulo. Os resultados a seguir referem-se a esse arquivo. A exportação mostrou-se fiel. As duas cadeias, \texttt{aixm}, com dois eventos, e \texttt{sbsj}, com dez, estão íntegras no arquivo e têm a mesma cabeça que na biblioteca. O comprimento calculado pelo verificador a partir do referencial exportado coincide com o da biblioteca, 2676,1954~m. A consulta de estado no SQLite, feita apenas com as visões do arquivo, produz o mesmo resultado que a biblioteca em todos os 82 pares de corte e \textit{feature}.
+O banco extraído é gerado escrevendo o cenário, por meio da biblioteca, em um PostgreSQL vazio e exportando-o para SQLite com consultas SQL diretas, sem a biblioteca. A fidelidade é verificada pela integridade e pela cabeça das duas cadeias, pelo comprimento que o verificador calcula a partir do referencial exportado e pela comparação do estado, feita só com as visões do arquivo, em todos os pares de corte e \textit{feature}. O arquivo publicado foi gerado com a versão 0.6.0 da biblioteca, antes da declaração das premissas das direções e da renomeação da cadeia do E1, e por isso os seus \textit{hashes} não coincidem com os da execução apresentada neste capítulo. Os resultados a seguir referem-se a esse arquivo. A exportação mostrou-se fiel. As duas cadeias, \texttt{aixm}, com dois eventos, e \texttt{sbsj}, com dez, estão íntegras no arquivo e têm a mesma cabeça que na biblioteca. O comprimento calculado pelo verificador a partir do referencial exportado coincide com o da biblioteca, 2676,1954~m. A consulta de estado no SQLite, feita apenas com as visões do arquivo, produz o mesmo resultado que a biblioteca em todos os 82 pares de corte e \textit{feature}.
 
 Com o arquivo, parte da avaliação deixa de depender da biblioteca. A mudança sem causa do E1, o estado em qualquer instante e a trilha de causa do E3 e a verificação por terceiros do E5 tornam-se consultas e programas curtos sobre um arquivo público \cite{aeroledger_dataset}.
 
@@ -170,10 +170,4 @@ Os cinco experimentos sobre a arquitetura foram aprovados, e a caracterização 
     \par\smallskip{\small Fonte: o autor.}
 \end{table}
 
-\section{Limites da avaliação}\label{sec:res-limites}
-
-O alcance dos resultados é restrito, em primeiro lugar, pelo escopo do estudo. A avaliação usa um único estudo de caso, com uma pista de um aeródromo, e a composição de várias pistas e de outros elementos do lado ar é argumentada, mas não medida. O cenário é também parcialmente simulado. As premissas e os valores de comparação são reais, mas a remedição e as restrições não ocorreram.
-
-Parte da arquitetura, além disso, não foi implementada. A biblioteca e o consumidor devolvem a cabeça da cadeia, mas a âncora foi guardada pelos próprios experimentos, e nenhum mecanismo a publica ou a compara automaticamente. A recusa por premissa ausente cobre apenas as premissas das distâncias declaradas; para os demais campos, a norma de preenchimento não foi implementada. A escrita serializada por bloqueio pessimista não foi testada com várias fontes escrevendo simultaneamente, e as alternativas propostas não foram implementadas. O tópico, mantido em memória, não permite avaliar o transporte real, o custo em escala, os tópicos derivados nem a confidencialidade.
-
-Alguns aspectos, por fim, não foram medidos. O volume do estudo de caso é pequeno demais para conclusões sobre o custo de leitura. A interoperabilidade entre organizações não pode ser testada com um único publicador, e o E5 e o E6 mostram as condições para ela, e não a interoperabilidade em si. O motor de geometria não foi comparado com as cartas oficiais e não entra em nenhum resultado. O Capítulo~\ref{chap:discussao} discute o significado desses resultados e limites em relação à pergunta de pesquisa.
+Os limites desta avaliação, como o estudo de caso único, o cenário parcialmente simulado e as partes da arquitetura não implementadas, estão reunidos na Tabela~\ref{tab:disc-demonstrado} e discutidos na Seção~\ref{sec:disc-validade}.
