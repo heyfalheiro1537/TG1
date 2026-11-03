@@ -55,7 +55,7 @@ Todos os valores calculados a partir das premissas ficam dentro da margem defini
 
 A remedição da cabeceira~34 gerou dois eventos. O primeiro registra o levantamento, com três campos. O segundo troca o referencial no aeródromo, com um único campo e o levantamento como causa. Nenhuma \textit{feature} com posição foi reescrita, seja a pista, as cabeceiras ou a zona de parada. O comprimento passou de 2675,342~m para 2676,195~m sem que nenhum número fosse digitado.
 
-Os cantos da pista e da zona de parada coincidem com o gabarito de Vincenty a menos de 3,3~nm, tanto com o referencial antigo quanto com o novo. O novo comprimento coincide com o gabarito a menos de 0,1~\textmu m. Ambas as diferenças ficam muito abaixo da exatidão de 0,5~mm do próprio gabarito.
+Os cantos da pista e da zona de parada coincidem com o gabarito de Vincenty a menos de 3,3~nm, tanto com o referencial antigo quanto com o novo. O novo comprimento coincide com o gabarito a menos de 0,1~\textmu m. Ambas as diferenças ficam muito abaixo da exatidão de 0,5~mm do próprio gabarito. Essas diferenças medem a exatidão numérica do cálculo, e não a do levantamento: as coordenadas de entrada têm a exatidão do levantamento que as produziu, que este trabalho não avalia. A concordância com a AIP, dentro da margem, mostra que os valores publicados são reproduzíveis a partir das premissas publicadas, e não que essas premissas descrevam a pista com exatidão.
 
 As duas perguntas do E2 têm, assim, resposta favorável à arquitetura. Os valores publicados se recalculam a partir das premissas dentro da precisão da AIP, e a troca de uma premissa não obriga a reescrever nenhum outro dado.
 
@@ -94,7 +94,7 @@ A resposta ao E4 é positiva, com um limite. Toda alteração no meio da cadeia 
 
 \section{E5: consistência e verificação}\label{sec:res-e5}
 
-Os dois produtos gerados do mesmo banco apresentam as mesmas distâncias em $t_a$, com ASDA~16 de 2958,342~m e LDA~34 de 2675,342~m. Depois da remedição, também coincidem, com 2959,195~m e 2676,195~m, e mudam juntos.
+Os dois produtos gerados do mesmo banco apresentam as mesmas distâncias em $t_a$, com ASDA~16 de 2958,342~m e LDA~34 de 2675,342~m. Depois da remedição, também coincidem, com 2959,195~m e 2676,195~m, e mudam juntos. A concordância mostra consistência entre as duas representações, e não a correção da regra de cálculo: os dois produtos aplicam a mesma regra, e um erro nela apareceria igual em ambos. A correção da regra é conferida separadamente, contra os valores publicados, no E2.
 
 O verificador independente declara a cadeia íntegra. Ele chega à mesma cabeça que a biblioteca e ao mesmo comprimento, 2676,1954~m, dentro da exatidão de Vincenty. No arquivo alterado, aponta exatamente o evento da pista.
 
@@ -104,7 +104,7 @@ O E5 tem, assim, as duas respostas esperadas. Os produtos gerados do mesmo banco
 
 \section{E6: leitura separada}\label{sec:res-e6}
 
-Os resultados do E6 são apresentados por propriedade, na ordem da Seção~\ref{sec:procedimentos}.
+Os resultados do E6 são apresentados por propriedade, na ordem da Seção~\ref{sec:procedimentos}. Todos foram obtidos com o tópico mantido em memória. As propriedades que dependem de um sistema de mensagens real, como perda, reentrega, retenção e atraso sob falha, não foram testadas.
 
 \paragraph*{Equivalência.} O tópico recebeu, inicialmente, os nove eventos escritos até o E5, em onze mensagens, contando os corpos dos dois referenciais. O décimo evento é a restrição escrita durante o próprio E6. Em todas as fronteiras de corte e nos três instantes testados, o consumidor apresenta os mesmos estados e as mesmas distâncias que o banco.
 
@@ -141,7 +141,7 @@ A resposta ao E6 é positiva, com o mesmo limite do E4. Quem lê pelo tópico ch
 
 \section{Banco extraído}\label{sec:res-banco}
 
-A exportação mostrou-se fiel. As duas cadeias, \texttt{aixm}, com dois eventos, e \texttt{sbsj}, com dez, estão íntegras no arquivo e têm a mesma cabeça que na biblioteca. O comprimento calculado pelo verificador a partir do referencial exportado coincide com o da biblioteca, 2676,1954~m. A consulta de estado no SQLite, feita apenas com as visões do arquivo, produz o mesmo resultado que a biblioteca em todos os 82 pares de corte e \textit{feature}.
+O arquivo publicado foi gerado com a versão 0.6.0 da biblioteca, antes da declaração das premissas das direções e da renomeação da cadeia do E1, e por isso os seus \textit{hashes} não coincidem com os da execução apresentada neste capítulo. Os resultados a seguir referem-se a esse arquivo. A exportação mostrou-se fiel. As duas cadeias, \texttt{aixm}, com dois eventos, e \texttt{sbsj}, com dez, estão íntegras no arquivo e têm a mesma cabeça que na biblioteca. O comprimento calculado pelo verificador a partir do referencial exportado coincide com o da biblioteca, 2676,1954~m. A consulta de estado no SQLite, feita apenas com as visões do arquivo, produz o mesmo resultado que a biblioteca em todos os 82 pares de corte e \textit{feature}.
 
 Com o arquivo, parte da avaliação deixa de depender da biblioteca. A mudança sem causa do E1, o estado em qualquer instante e a trilha de causa do E3 e a verificação por terceiros do E5 tornam-se consultas e programas curtos sobre um arquivo público \cite{aeroledger_dataset}.
 
@@ -149,7 +149,7 @@ O E4 sai fortalecido. Qualquer pessoa pode remover os gatilhos ou editar os \tex
 
 \section{Síntese}\label{sec:res-sintese}
 
-Os seis experimentos foram aprovados segundo os critérios definidos antes da execução. A Tabela~\ref{tab:res-sintese} reúne as respostas e, para cada uma, o que permanece fora do alcance demonstrado.
+Os cinco experimentos sobre a arquitetura foram aprovados, e a caracterização do E1 confirmou a lacuna, segundo os critérios definidos antes da execução. A Tabela~\ref{tab:res-sintese} reúne as respostas e, para cada uma, o que permanece fora do alcance demonstrado.
 
 \begin{table}[htbp]
     \centering
@@ -159,7 +159,7 @@ Os seis experimentos foram aprovados segundo os critérios definidos antes da ex
         \toprule
         Experimento & Resposta & O que fica de fora \\
         \midrule
-        E1 Causa (contraste) & não; 12 campos mudam sem causa & -- \\
+        E1 Causa (caracterização) & não; 12 campos mudam sem causa & -- \\
         E2 Derivação & valores recalculados dentro da precisão da AIP; a remedição escreve apenas o levantamento e a troca de referencial & regra para barreira de contenção; deslocamento e CWY lidos da AD~2.13, sem conferência independente \\
         E3 Reconstrução no tempo & qualquer instante reconstruído, com autor, motivo e causa & consulta pelo tempo do fato \\
         E4 Evidência de adulteração & alterações no meio da cadeia detectadas & reescrita completa, detectada apenas pela âncora \\
