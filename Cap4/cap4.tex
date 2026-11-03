@@ -188,10 +188,10 @@ O requisito de posição relativa (Seção~\ref{sec:req-posicao}) é atendido po
     \includegraphics[width=0.85\linewidth]{Figures/fig-referencial-sbsj.pdf}
     \caption{Referencial do SBSJ: as cabeceiras THR16 e THR34 como referentes georreferenciados e o elemento linear RWY\_16\_34 entre elas.}
     \label{fig:referencial-sbsj}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
-A publicação de um referencial deve seguir as seguintes regras (Figura~\ref{fig:regras-referencial}), caso contrário será rejeitada:
+A publicação de um referencial deve seguir as seguintes regras (Figura~\ref{fig:regras-referencial}), sob pena de ser rejeitada:
 \begin{itemize}
     \item cada referente deve ser definido por exatamente um dos seguintes
     métodos: por georreferenciamento, com latitude e longitude, ou por
@@ -210,7 +210,7 @@ A publicação de um referencial deve seguir as seguintes regras (Figura~\ref{fi
     \includegraphics[width=\linewidth]{Figures/fig-regras-referencial.pdf}
     \caption{Exemplo de referencial aceito e um caso de rejeição para cada regra de publicação.}
     \label{fig:regras-referencial}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 O número de referentes é livre. Um aeroporto com várias pistas teria um elemento linear por eixo, e os referentes de uma pista poderiam ser independentes dos de outra. Essa configuração não é avaliada neste trabalho.
@@ -231,7 +231,7 @@ em que $z_r$ é a altitude do referente e $v$ o afastamento vertical. Os compone
     \includegraphics[width=\linewidth]{Figures/fig-seed-lrs.pdf}
     \caption{Componentes de uma \textit{seed}: em planta, a distância $s$ e o afastamento lateral $o$; em perfil, o afastamento vertical $v$ a partir da altitude do referente. A escala lateral da planta está exagerada.}
     \label{fig:seed-lrs}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 A zona de parada do SBSJ, por exemplo, termina em $\{\mathrm{RWY\_16\_34},\, \mathrm{THR34},\, -283,\, 0\}$, isto é, 283~m para fora da cabeceira~34, sobre o eixo. Um afastamento vertical ausente significa ``não informado'', e não zero. A posição continua definida no plano, mas a sua altitude não. Em uma pista em rampa, um zero implícito atribuiria à posição a altitude do referente, o que estaria errado. A Figura~\ref{fig:afastamento-vertical-ausente} ilustra a diferença.
@@ -241,7 +241,7 @@ A zona de parada do SBSJ, por exemplo, termina em $\{\mathrm{RWY\_16\_34},\, \ma
     \includegraphics[width=\linewidth]{Figures/fig-afastamento-vertical-ausente.pdf}
     \caption{Afastamento vertical ausente: tratado como zero, atribui à posição a altitude do referente; tratado como não informado, mantém a posição definida apenas no plano.}
     \label{fig:afastamento-vertical-ausente}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 O azimute do eixo é calculado pela geodésica entre as duas pontas do elemento e recalculado ao longo do caminho, razão pela qual a posição depende do elemento, e não apenas do referente. Pelo mesmo motivo, a declividade do eixo decorre da diferença de altitude entre as pontas.
@@ -262,7 +262,7 @@ Na pista do SBSJ, um erro de $0{,}01^\circ$ no azimute corresponde a aproximadam
     \includegraphics[width=\linewidth]{Figures/fig-erro-angular.pdf}
     \caption{Posicionamento por um referente e um azimute registrado, comparado ao posicionamento por duas pontas medidas, e o erro lateral $\varepsilon_\perp \approx s\,\delta\theta$ ao longo da pista do SBSJ. O ângulo do esquema superior está exagerado.}
     \label{fig:erro-angular}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 Referentes adicionais, como marcos geodésicos ou pontos de mudança de greide do perfil longitudinal, reduzem a distância entre uma posição e o ponto medido mais próximo (Figura~\ref{fig:referentes-adicionais}), mas também oferecem redundância. A distância calculada entre dois referentes pode ser comparada com a medida em campo, e uma divergência indica que uma das medições precisa ser verificada.
@@ -272,7 +272,7 @@ Referentes adicionais, como marcos geodésicos ou pontos de mudança de greide d
     \includegraphics[width=\linewidth]{Figures/fig-referentes-adicionais.pdf}
     \caption{Efeito de referentes adicionais sobre a distância entre uma posição e o ponto medido mais próximo. As posições do marco e da mudança de greide são ilustrativas.}
     \label{fig:referentes-adicionais}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 \subsection{Plano e altitude}\label{sec:plano-altitude}
@@ -286,19 +286,19 @@ Essa separação tem uma consequência que precisa ser declarada. Um comprimento
     \includegraphics[width=\linewidth]{Figures/fig-plano-altitude.pdf}
     \caption{Comprimento sobre o elipsoide, na altitude da pista e sobre o pavimento inclinado, e as reduções de altitude e de inclinação na pista do SBSJ. Curvatura e alturas do esquema estão exageradas.}
     \label{fig:plano-altitude}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 \subsection{Remedição como evento}
 
-Como nenhuma \textit{seed} guarda coordenadas nem comprimentos, o fato de remedir uma cabeceira é registrada em três passos (Figura~\ref{fig:remedicao-evento}). O primeiro é um evento que registra o levantamento, como \textit{feature} própria. O segundo é a publicação de um referencial com a nova posição da cabeceira. O terceiro é um \texttt{DELTA} na \textit{feature} \texttt{airport} que troca o \texttt{ref\_id}, com causa no levantamento. A pista, a zona de parada e as distâncias declaradas acompanham a mudança na leitura seguinte, e o histórico mostra por que mudaram.
+Como nenhuma \textit{seed} guarda coordenadas nem comprimentos, a remedição de uma cabeceira é registrada em três passos (Figura~\ref{fig:remedicao-evento}). O primeiro é um evento que registra o levantamento, como \textit{feature} própria. O segundo é a publicação de um referencial com a nova posição da cabeceira. O terceiro é um \texttt{DELTA} na \textit{feature} \texttt{airport} que troca o \texttt{ref\_id}, com causa no levantamento. A pista, a zona de parada e as distâncias declaradas acompanham a mudança na leitura seguinte, e o histórico mostra por que mudaram.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{Figures/fig-remedicao-evento.pdf}
     \caption{Remedição de uma cabeceira como sequência de eventos: as \textit{seeds} permanecem inalteradas e os valores derivados são recalculados a partir do novo referencial. Os identificadores são ilustrativos.}
     \label{fig:remedicao-evento}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 \subsection{Geometria}
@@ -310,7 +310,7 @@ A geometria das \textit{features} também é derivada. Ela é gerada a partir da
     \includegraphics[width=\linewidth]{Figures/fig-geometria-derivada.pdf}
     \caption{Geometria gerada a partir das \textit{seeds} no plano local com origem em THR34. O ponto e a coroa são ilustrativos.}
     \label{fig:geometria-derivada}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 
 \section{A escrita}\label{sec:escrita}
@@ -363,11 +363,11 @@ Além do estado, o registro responde à diferença entre dois instantes, com os 
     \includegraphics[width=1\linewidth]{Figures/estado-instante.png}
     \caption{Estado de uma \textit{feature} em $t$: composição do \texttt{BASELINE} com os eventos até $t$, tomando para cada caminho o valor mais recente e excluindo os campos removidos. Os valores são ilustrativos.}
     \label{fig:estado-instante}
-    % \fonte{Elaborado pelo autor.}
+    \par\smallskip{\small Fonte: o autor.}
 \end{figure}
 \subsection{Valores derivados}\label{sec:derivados}
 
-O requisito do mínimo de informação (Seção~\ref{sec:req-minimo}) é atendido calculando na leitura tudo o que pode ser calculado. Valores como comprimento, azimute, rumo magnético e distâncias declaradas não deveriam ser gravados. O comprimento e os azimutes resultam da geodésica entre os referentes, e o rumo magnético, do azimute e da variação magnética registrada no aeródromo. As distâncias declaradas resultam das definições do Anexo~14 (Seção~\ref{sec:distancias}), aplicadas ao estado no instante pedido:
+O requisito do mínimo de informação (Seção~\ref{sec:req-minimo}) é atendido calculando na leitura tudo o que pode ser calculado. Valores como comprimento, azimute, rumo magnético e distâncias declaradas não são gravados. O comprimento e os azimutes resultam da geodésica entre os referentes, e o rumo magnético, do azimute e da variação magnética registrada no aeródromo. As distâncias declaradas resultam das definições do Anexo~14 (Seção~\ref{sec:distancias}), aplicadas ao estado no instante pedido:
 \begin{equation}
     \begin{aligned}
         \mathrm{TORA} &= L, & \mathrm{TODA} &= L + \mathrm{CWY},\\
@@ -399,7 +399,7 @@ Se todo produto for lido diretamente do banco, o banco passa a ser um ponto úni
 
 \subsection{O tópico geral}
 
-O tópico geral é o próprio registro de um aeródromo, publicado evento a evento, com envelope e corpo, fora do banco. Ele é alimentado por um retransmissor que lê os eventos em ordem de \texttt{event\_id} e os anexa ao tópico, como em uma captura de mudanças (Seção~\ref{sec:distribuidos}). O retransmissor não guarda estado próprio, e o ponto de onde continua é o último evento já presente no tópico e executá-lo novamente não duplica nada, assim, um tópico perdido é refeito do zero a partir do registro. O retransmissor também não espera nenhum consumidor, antes do evento que adota um referencial, ele publica o corpo desse referencial, endereçado pelo conteúdo, de modo que o tópico é suficiente para quem o lê.
+O tópico geral é o próprio registro de um aeródromo, publicado evento a evento, com envelope e corpo, fora do banco. Ele é alimentado por um retransmissor que lê os eventos em ordem de \texttt{event\_id} e os anexa ao tópico, como em uma captura de mudanças (Seção~\ref{sec:distribuidos}). O retransmissor não guarda estado próprio, e o ponto de onde continua é o último evento já presente no tópico. Executá-lo novamente não duplica nada, e um tópico perdido é refeito do zero a partir do registro. O retransmissor também não espera nenhum consumidor. Antes do evento que adota um referencial, ele publica o corpo desse referencial, endereçado pelo conteúdo, de modo que o tópico é suficiente para quem o lê.
 
 Há um único tópico, com todos os eventos, e todo consumidor o lê. Essa escolha mantém a camada mínima por quatro razões:
 \begin{itemize}
@@ -487,7 +487,7 @@ divergências explícitas e atribuíveis, em vez de silenciosas.
 
 Diante do compromisso descrito pelo teorema CAP (Seção~\ref{sec:distribuidos}), a arquitetura faz uma escolha em cada ponta. A escrita privilegia a consistência (Seção~\ref{sec:escrita}). A leitura privilegia a disponibilidade, com consumidores independentes que continuam respondendo com o banco fora do ar e que podem estar atrasados.
 
-O atraso não leva a respostas diferentes. Como o registro só cresce, todo consumidor guarda um prefixo íntegro dele. Uma leitura com limite explícito tem, então, apenas duas respostas possíveis em qualquer consumidor. Ou seja, se ele já aplicou o registro até aquele limite, a resposta é a mesma de todos os outros, caso contrário, não há resposta. Um consumidor atrasado pode desconhecer um evento recente, mas não pode responder de forma diferente sobre um limite que já conhece.
+O atraso não leva a respostas diferentes. Como o registro só cresce, todo consumidor guarda um prefixo íntegro dele. Uma leitura com limite explícito tem, então, apenas duas respostas possíveis em qualquer consumidor. Ou seja, se ele já aplicou o registro até aquele limite, a resposta é a mesma de todos os outros; caso contrário, não há resposta. Um consumidor atrasado pode desconhecer um evento recente, mas não pode responder de forma diferente sobre um limite que já conhece.
 
 \section{Verificação por terceiro}\label{sec:verificacao}
 
@@ -533,7 +533,7 @@ O esquema espelha o do registro, com o envelope em colunas e o corpo em JSONB, o
     \item \texttt{evento}, com o envelope em colunas e o corpo como a lista de linhas, cada uma com caminho, operação e valor, ordenada pelo caminho, exatamente a que entra no \textit{hash}.
 \end{itemize}
 
-\textit{Triggers} do banco impedem a atualização e a exclusão de eventos, exigem o encadeamento e conferem a forma das linhas do corpo e as \textit{views} de leitura completam o arquivo. A \textit{view} \texttt{evento\_legivel} apresenta o instante extraído do próprio identificador, e a \textit{view} \texttt{campo}, o corpo achatado, com uma linha por campo. A \textit{view} \texttt{cabeca} mostra o último evento de cada cadeia, para comparação com a âncora, e a \textit{view} \texttt{estado\_atual}, as \textit{features} vivas e os seus campos. O arquivo traz ainda consultas de exemplo comentadas, que mostram o estado em um corte, o que mudou entre dois cortes, a trilha de causa de um evento e o referencial vigente. O esquema completo está no Apêndice~\ref{ape:ddl}.
+Gatilhos (\textit{triggers}) do banco impedem a atualização e a exclusão de eventos, exigem o encadeamento e conferem a forma das linhas do corpo, e visões (\textit{views}) de leitura completam o arquivo. A visão \texttt{evento\_legivel} apresenta o instante extraído do próprio identificador, e a visão \texttt{campo}, o corpo achatado, com uma linha por campo. A visão \texttt{cabeca} mostra o último evento de cada cadeia, para comparação com a âncora, e a visão \texttt{estado\_atual}, as \textit{features} vivas e os seus campos. O arquivo traz ainda consultas de exemplo comentadas, que mostram o estado em um corte, o que mudou entre dois cortes, a trilha de causa de um evento e o referencial vigente. O esquema completo está no Apêndice~\ref{ape:ddl}.
 
 Para isso, a exportação deve ser fiel, com os mesmos eventos, \textit{hashes} e cabeça do registro, e o mesmo estado em qualquer corte. Ficam fora do arquivo os derivados, que nunca são gravados, e as garantias da escrita, como a recusa de eventos malformados, que pertencem ao ponto de entrada, e não a um arquivo pronto.
 
