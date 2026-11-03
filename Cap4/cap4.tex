@@ -146,9 +146,9 @@ O significado desses tipos é mais simples que no AIXM, pois não há distinçã
 
 Algumas mudanças exigem mais de um evento. A carga de uma edição do AIP, por exemplo, cria de uma só vez o aeródromo, a pista, as cabeceiras e a zona de parada. Uma leitura feita no meio dessa carga mostraria a pista sem a zona de parada e calcularia uma ASDA igual à TORA, sem nenhum erro aparente. Para evitar esse estado intermediário, a arquitetura define o grupo, um conjunto de dois ou mais eventos gravados juntos, ou todos ou nenhum, contíguos no registro e no mesmo instante.
 
-Cada evento do grupo leva no envelope o \texttt{grupo\_id}, que é o identificador do primeiro evento, e o \texttt{grupo\_n}, que é o número de eventos do grupo. O primeiro campo registra quais eventos formam uma mesma mudança, o que o instante comum, por si só, não garante. O segundo permite a quem lê saber se já recebeu o grupo inteiro. Uma leitura cujo limite caia dentro de um grupo recua até antes dele, de modo que nenhum corte mostra uma mudança pela metade (Seção~\ref{sec:distribuicao}).
+Cada evento do grupo leva no envelope o \texttt{grupo\_id}, que é o identificador do primeiro evento, e o \texttt{grupo\_n}, que é o número de eventos do grupo. O primeiro campo registra quais eventos formam uma mesma mudança, o que o instante comum, por si só, não garante. O segundo permite a quem lê saber se já recebeu o grupo inteiro. Uma leitura cujo limite caia dentro de um grupo recua até antes dele, de modo que nenhum corte mostra uma mudança pela metade, seja na leitura do registro, seja no consumidor (Seção~\ref{sec:distribuicao}).
 
-O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, no qual as partidas de uma transferência entram juntas e o livro nunca mostra o débito sem o crédito. Há, contudo, uma diferença. Na contabilidade, as partidas de um lançamento somam zero, e uma transferência incompleta se denuncia sozinha. Aqui não há lei de conservação, e uma pista sem zona de parada é um estado plausível. A atomicidade, por isso, não pode depender de uma conferência posterior.
+O grupo cumpre o papel do lançamento em um livro-razão de partidas dobradas, no qual as partidas de uma transferência entram juntas e o livro nunca mostra o débito sem o crédito. Há, contudo, uma diferença. Na contabilidade, as partidas de um lançamento somam zero, e uma transferência incompleta se denuncia sozinha. Aqui não há lei de conservação, e uma pista sem zona de parada é um estado plausível. As declarações de cada direção de pista (Seção~\ref{sec:derivados}) recuperam uma conferência parcial, pois uma zona de parada declarada e ausente leva à recusa da ASDA, mas nada equivalente existe para o restante do corpo, que é livre. A atomicidade, por isso, não pode depender de uma conferência posterior.
 
 \section{Tempo}\label{sec:tempo}
 
@@ -193,7 +193,7 @@ A extensão para dois eixos de tempo está entre as propostas da Seção~\ref{se
 
 \subsection{O referencial}
 
-O requisito de posição relativa (Seção~\ref{sec:req-posicao}) é atendido por um referencial, documento que declara os referentes, isto é, os pontos medidos em que as posições se apoiam, e os elementos lineares entre eles. No SBSJ, o referencial tem dois referentes georreferenciados, as cabeceiras THR16 e THR34, e um elemento linear entre elas, RWY\_16\_34. Cada referente tem latitude, longitude, elevação, ondulação geoidal e fonte, e o datum é o SIRGAS2000. A Figura~\ref{fig:referencial-sbsj} mostra esse referencial.
+O requisito de posição relativa (Seção~\ref{sec:req-posicao}) é atendido por um referencial, documento que declara os referentes, isto é, os pontos medidos em que as posições se apoiam, e os elementos lineares entre eles. No SBSJ, o referencial tem dois referentes georreferenciados, as cabeceiras THR16 e THR34, e um elemento linear entre elas, RWY\_16\_34. Em geral, as pontas do elemento linear são as extremidades da pista, e uma cabeceira deslocada é uma posição sobre ele, a uma distância $d$ da extremidade. No SBSJ, as duas direções declaram deslocamento nulo (Seção~\ref{sec:aplicacao-sbsj}), e as extremidades coincidem com as cabeceiras publicadas na AD~2.12. Cada referente tem latitude, longitude, elevação, ondulação geoidal e fonte, e o datum é o SIRGAS2000. A Figura~\ref{fig:referencial-sbsj} mostra esse referencial.
 
 \begin{figure}[htbp]
     \centering
@@ -387,9 +387,9 @@ O requisito do mínimo de informação (Seção~\ref{sec:req-minimo}) é atendid
     \end{aligned}
     \label{eq:distancias-declaradas}
 \end{equation}
-em que $L$ é o comprimento da pista, CWY e SWY são os comprimentos da zona livre de obstáculos e da zona de parada aplicáveis àquela direção, também calculados a partir das \textit{seeds}, e $d$ é o deslocamento da cabeceira, registrado como premissa da direção.
+em que $L$ é o comprimento da pista entre as suas extremidades, CWY e SWY são os comprimentos da zona livre de obstáculos e da zona de parada aplicáveis àquela direção, também calculados a partir das \textit{seeds}, e $d$ é o deslocamento da cabeceira, registrado como premissa da direção.
 
-O cálculo é recusado, em vez de estimado, quando falta uma premissa estrutural. Sem referencial vigente, não há derivado, e uma \textit{seed} incompleta já é recusada na escrita. Pela mesma razão, um caso para o qual não há regra definida, como uma pista com barreira de contenção, leva à recusa, e não a um número possivelmente errado. Sem a norma de preenchimento proposta na Seção~\ref{sec:extensoes}, porém, o registro não distingue ``não se aplica'' de ``não informado''. A ausência de uma zona de parada, de uma zona livre de obstáculos ou de um deslocamento é lida como zero.
+O cálculo é recusado, em vez de estimado, quando falta uma premissa estrutural. Sem referencial vigente, não há derivado, e uma \textit{seed} incompleta já é recusada na escrita. Pela mesma razão, um caso para o qual não há regra definida, como uma pista com barreira de contenção, leva à recusa, e não a um número possivelmente errado. Pela mesma razão, a ausência de uma premissa não é lida como zero. Cada direção de pista declara o deslocamento da sua cabeceira, com zero permitido, e se há zona de parada e zona livre de obstáculos para a decolagem nessa direção. Sem a declaração, o valor que depende dela é recusado. Uma declaração que contradiz as \textit{features} registradas, como uma zona de parada declarada e não registrada, também é recusada. A recusa é feita por valor, de modo que a TORA de uma direção continua calculada mesmo quando a sua LDA é recusada. Essas declarações distinguem ``não se aplica'', afirmado como zero ou como ausência declarada, de ``não informado''. A distinção entre ``não informado'' e ``desconhecido'' e a sua extensão aos demais campos dependem da norma de preenchimento proposta na Seção~\ref{sec:extensoes}.
 
 \subsection{Modelos de leitura e caches}
 
@@ -553,7 +553,7 @@ Para isso, a exportação deve ser fiel, com os mesmos eventos, \textit{hashes} 
 
 \section{Implementação}\label{sec:implementacao}
 
-A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.6.0 (\textit{commit} \texttt{e93b718}) \cite{aeroledger}. A biblioteca é escrita em Python~3.12 sobre PostgreSQL~14 ou superior, com \texttt{psycopg} para o acesso ao banco, \texttt{pyproj} para a geodésia e \texttt{shapely} para a geometria. A biblioteca é o objeto avaliado. Os experimentos a utilizam como qualquer usuário a utilizaria, e cada passo corresponde a uma chamada a ela. A Tabela~\ref{tab:implementacao} relaciona as peças da arquitetura aos componentes da biblioteca.
+A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.7.0 (\textit{commit} \texttt{fe478ea}) \cite{aeroledger}. A biblioteca é escrita em Python~3.12 sobre PostgreSQL~14 ou superior, com \texttt{psycopg} para o acesso ao banco, \texttt{pyproj} para a geodésia e \texttt{shapely} para a geometria. A biblioteca é o objeto avaliado. Os experimentos a utilizam como qualquer usuário a utilizaria, e cada passo corresponde a uma chamada a ela. A Tabela~\ref{tab:implementacao} relaciona as peças da arquitetura aos componentes da biblioteca.
 
 \begin{table}[htbp]
     \centering
@@ -565,9 +565,9 @@ A arquitetura foi implementada na biblioteca \texttt{aeroledger}, versão 0.6.0 
         \midrule
         Escrita (Seção~\ref{sec:escrita}) & funções \texttt{escrever} e \texttt{escrever\_grupo}, que validam a forma e gravam na mesma transação \\
         Registro (Seção~\ref{sec:registro}) & tabelas \texttt{event} (envelope) e \texttt{event\_field} (uma linha por campo do corpo), apenas com inserção; tabela \texttt{referencial}, endereçada pelo conteúdo \\
-        Estado em $t$ (Seção~\ref{sec:leitura}) & \texttt{DISTINCT ON} sobre o índice (\textit{feature}, caminho, evento); varredura saltada do índice para listar as \textit{features} vivas \\
+        Estado em $t$ (Seção~\ref{sec:leitura}) & \texttt{DISTINCT ON} sobre o índice (\textit{feature}, caminho, evento); varredura saltada do índice para listar as \textit{features} vivas; limite que recua para antes de um grupo incompleto \\
         Cópias de leitura & tabelas \texttt{snapshot} e \texttt{projecao\_cache} (marca d'água) \\
-        Derivados & módulo \texttt{derivacoes}; erro \texttt{RegraPendente} para a pista com barreira de contenção \\
+        Derivados & módulo \texttt{derivacoes}; recusa por valor quando uma premissa da direção não foi declarada ou contradiz as \textit{features}; erro \texttt{RegraPendente} para a pista com barreira de contenção \\
         Lente da carta & módulo \texttt{adc} \\
         Tópico geral e consumidores (Seção~\ref{sec:distribuicao}) & módulo \texttt{topico}, com \texttt{retransmitir}, \texttt{Consumidor} e \texttt{TopicoMemoria}; erros \texttt{TopicoCorrompido} e \texttt{ConsumidorAtrasado} \\
         Verificação (Seção~\ref{sec:verificacao}) & funções \texttt{verificar\_cadeia} e \texttt{cabeca} \\
@@ -584,7 +584,7 @@ A implementação difere da arquitetura em quatro pontos, que limitam o alcance 
     \item o motor de geometria é uma demonstração, que desenha a carta a partir do registro, mas não foi validado contra as cartas oficiais.
 \end{itemize}
 
-A biblioteca tem 57 testes próprios, sobre um aeródromo fictício, cada um executado em um banco descartável. Eles cobrem, entre outros aspectos, as recusas de escrita, as regras do referencial, os grupos e a equivalência entre a leitura com \textit{snapshot} e a reconstrução completa. Em relação aos grupos, verificam a contiguidade, a presença no \textit{hash} e a gravação de todos ou de nenhum dos eventos. Esses testes não integram a avaliação. Eles garantem que a biblioteca faz o que declara antes de ser avaliada sobre o SBSJ.
+A biblioteca tem 60 testes próprios, sobre um aeródromo fictício, cada um executado em um banco descartável. Eles cobrem, entre outros aspectos, as recusas de escrita, as regras do referencial, a recusa das distâncias cujas premissas faltam, os grupos e a equivalência entre a leitura com \textit{snapshot} e a reconstrução completa. Em relação aos grupos, verificam a contiguidade, a presença no \textit{hash}, a gravação de todos ou de nenhum dos eventos e o recuo da leitura, no registro e no consumidor, quando o limite cai dentro de um grupo. Esses testes não integram a avaliação. Eles garantem que a biblioteca faz o que declara antes de ser avaliada sobre o SBSJ.
 
 \section{Aplicação ao SBSJ}\label{sec:aplicacao-sbsj}
 
@@ -600,7 +600,7 @@ Os experimentos usam duas cadeias. A cadeia \texttt{aixm} guarda a pista na form
         \toprule
         \# & \textit{Feature} & Evento & Conteúdo \\
         \midrule
-        1--5 & \makecell[l]{SBSJ, SBSJ-RWY,\\ SBSJ-THR16,\\ SBSJ-THR34,\\ SBSJ-SWY} & \makecell[l]{\texttt{BASELINE},\\ em grupo} & carga do eAIP: aeródromo com referencial vigente e variação magnética; pista como retângulo entre as cabeceiras, com 45~m de largura; cabeceiras sobre os seus referentes; zona de parada de 283~m além da cabeceira~34 \\
+        1--5 & \makecell[l]{SBSJ, SBSJ-RWY,\\ SBSJ-THR16,\\ SBSJ-THR34,\\ SBSJ-SWY} & \makecell[l]{\texttt{BASELINE},\\ em grupo} & carga do eAIP: aeródromo com referencial vigente e variação magnética; pista como retângulo entre as extremidades, com 45~m de largura; cabeceiras sobre os seus referentes, com deslocamento nulo e presença de zona de parada e de zona livre de obstáculos declarados; zona de parada de 283~m além da cabeceira~34 \\
         6 & SBSJ-LEV-THR34 & \texttt{BASELINE} & levantamento que remede a cabeceira~34 (simulado) \\
         7 & SBSJ & \texttt{DELTA} & troca do referencial, com causa no evento~6 \\
         8--9 & SBSJ-RES-0001 & \makecell[l]{\texttt{BASELINE},\\ \texttt{VOID}} & interdição de 300~m a partir da cabeceira~34, com a pista como dona, e o seu encerramento (NOTAM simulado) \\
@@ -610,7 +610,9 @@ Os experimentos usam duas cadeias. A cadeia \texttt{aixm} guarda a pista na form
     \par\smallskip{\small Fonte: o autor, a partir de \citeonline{decea2026aip}.}
 \end{table}
 
-O referencial tem os dois referentes georreferenciados, com as coordenadas e elevações da seção AD~2.12, e o elemento linear entre eles. A pista entra como um retângulo de 45~m de largura entre as cabeceiras. A zona de parada entra como um retângulo de 283~m a partir da cabeceira~34, aplicado à direção~16. A variação magnética é de $22^\circ$W. O número 2675 não é escrito em nenhum evento.
+O referencial tem os dois referentes georreferenciados, com as coordenadas e elevações da seção AD~2.12, e o elemento linear entre eles. A pista entra como um retângulo de 45~m de largura entre as extremidades, que coincidem com as cabeceiras. A zona de parada entra como um retângulo de 283~m a partir da cabeceira~34, aplicado à direção~16. A variação magnética é de $22^\circ$W. O número 2675 não é escrito em nenhum evento.
+
+Cada direção declara deslocamento nulo e a ausência de zona livre de obstáculos; a direção~16 declara a zona de parada, e a~34, a sua ausência. Esses valores vêm da tabela de distâncias declaradas da AD~2.13, em que a LDA e a TODA são iguais à TORA nas duas direções. A observação da AD~2.12 que descreve a cabeceira~34 como deslocada (Seção~\ref{sec:req-minimo}) não é refletida na tabela. O cenário adota a tabela e registra o conflito no motivo do evento da cabeceira~34, de modo que a escolha fica afirmada, com autor, e não implícita. Como essas premissas são lidas das distâncias publicadas, a comparação da TODA e da LDA no E2 confere a regra de cálculo, mas não é independente delas.
 
 \subsection{Procedimentos dos experimentos}\label{sec:procedimentos}
 
@@ -618,7 +620,7 @@ As perguntas e os critérios de aprovação de cada experimento estão na Seçã
 
 \paragraph*{E1: causa.} A cadeia \texttt{aixm} não emula o AIXM completo, apenas as duas edições que o usuário recebe, com cada número publicado guardado como campo e sem causa. A pista é registrada com os valores da AOC de 2022 e, em seguida, alterada com os da ADC de 2026, ambos afirmados pelo DECEA. Contam-se os campos que mudam e verifica-se se algum deles traz causa.
 
-\paragraph*{E2: derivação.} Entram no registro apenas as premissas, isto é, as coordenadas e elevações das cabeceiras, a largura da pista e as dimensões da zona de parada. O comprimento, os azimutes, os rumos magnéticos e as distâncias declaradas são calculados e comparados com os valores da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m. Conferem-se então os eventos escritos e os novos valores contra o gabarito de Vincenty.
+\paragraph*{E2: derivação.} Entram no registro apenas as premissas, isto é, as coordenadas e elevações das cabeceiras, a largura da pista, as dimensões da zona de parada e, para cada direção, o deslocamento da cabeceira e a presença de zona de parada e de zona livre de obstáculos. O comprimento, os azimutes, os rumos magnéticos e as distâncias declaradas são calculados e comparados com os valores da AIP. Em seguida, a cabeceira~34 é remedida, deslocada em cerca de 1~m. Conferem-se então os eventos escritos e os novos valores contra o gabarito de Vincenty.
 
 \paragraph*{E3: reconstrução no tempo.} Após a remedição, uma interdição de 300~m a partir da cabeceira~34 entra como restrição, com a pista como dona, e é encerrada três dias depois. O banco é então consultado como um auditor faria, em instantes anteriores, intermediários e posteriores a cada mudança. São consultados:
 \begin{itemize}
@@ -644,7 +646,7 @@ Cada ataque é executado em uma cópia do banco e conferido de duas formas, pela
 \paragraph*{E6: leitura separada.} O registro é retransmitido para o tópico, e as seis propriedades do E6 são exercitadas da seguinte forma:
 \begin{itemize}
     \item \textbf{equivalência}: um consumidor lê todo o tópico, e as suas respostas são comparadas com as do banco em cada fronteira de corte do histórico e em três instantes, a saber, logo após a carga, durante a interdição e um segundo antes do seu fim;
-    \item \textbf{atomicidade}: o banco e o consumidor são consultados com um limite que cai dentro da carga do eAIP, logo após a pista e antes da zona de parada;
+    \item \textbf{atomicidade}: o banco e o consumidor são consultados com um limite que cai dentro da carga do eAIP, logo após a pista e antes das cabeceiras e da zona de parada; no mesmo ponto, consulta-se a primitiva SQL de estado, que não conhece grupos, e aplica-se a regra das distâncias ao estado parcial que ela mostra;
     \item \textbf{recorte}: um consumidor que assina apenas a cabeceira~16 é comparado com o que lê tudo;
     \item \textbf{limite explícito e disponibilidade}: uma restrição nova é escrita no banco, e o consumidor é consultado sobre ela antes e depois de recebê-la, e novamente com o banco fechado;
     \item \textbf{determinismo}: seis consumidores leem o tópico de formas diferentes, e comparam-se os \textit{hashes} das respostas no mesmo limite. As formas são tudo de uma vez; em laço, uma mensagem por vez; em lotes de duas mensagens, menores que a carga; por agendamento; com uma queda no meio e retomada a partir de uma posição gravada em arquivo; e a partir de um tópico refeito do zero;
@@ -717,9 +719,10 @@ organizada em três camadas:
 
 A norma distingue três estados de ausência: ``não informado'',
 ``não se aplica'' e ``desconhecido''. Essa distinção impede que a falta
-de uma premissa seja interpretada automaticamente como zero. Por exemplo,
-se o deslocamento de uma cabeceira for necessário para um cálculo, sua
-ausência deve resultar na recusa desse cálculo.
+de uma premissa seja interpretada automaticamente como zero. A biblioteca
+já a aplica às premissas das distâncias declaradas (Seção~\ref{sec:derivados}):
+a falta do deslocamento de uma cabeceira leva à recusa da LDA. A norma a
+estenderia aos demais campos e acrescentaria o estado ``desconhecido''.
 
 A norma é versionada para que cada evento possa ser interpretado segundo
 as regras aplicáveis, sem reescrever o histórico. Assim, a estrutura do
@@ -814,10 +817,12 @@ Seção~\ref{sec:implementacao}.
     confirmar se o histórico recebido corresponde ao anteriormente
     publicado.
 
-    \item \textbf{Interpretação dos dados:} sem uma norma de preenchimento,
-    a ausência de um campo pode ser confundida com um valor válido, como
-    zero. A distinção entre ausência, inaplicabilidade e desconhecimento
-    depende da adoção de convenções explícitas.
+    \item \textbf{Interpretação dos dados:} as premissas das distâncias
+    declaradas têm declaração obrigatória, e a sua falta leva à recusa. Nos
+    demais campos, sem uma norma de preenchimento, a ausência de um campo
+    pode ser confundida com um valor válido, como zero, e a distinção entre
+    ausência, inaplicabilidade e desconhecimento depende da adoção de
+    convenções explícitas.
 
     \item \textbf{Confidencialidade:} o tópico geral expõe os eventos nele
     publicados aos seus consumidores. O isolamento de dados restritos exige
